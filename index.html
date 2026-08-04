@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pool Timetable Creator V13</title>
+<title>Pool Timetable Creator V16</title>
 <style>
 :root {
   --navy:#163a5f;
@@ -114,6 +114,17 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .drag-handle.top{top:-5px}.drag-handle.bottom{bottom:-5px}
 .nudge-arrow{position:absolute;top:50%;transform:translateY(-50%);width:25px;height:25px;padding:0;border-radius:50%;background:white;color:var(--navy);border:2px solid var(--navy);display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;z-index:12}
 .nudge-arrow.prev{left:-34px}.nudge-arrow.next{right:-34px}
+.booking-delete-btn{position:absolute;top:-15px;right:-15px;width:30px;height:30px;padding:0;border-radius:50%;background:#fff;color:#a11f2b;border:2px solid #a11f2b;display:flex;align-items:center;justify-content:center;z-index:14;box-shadow:0 2px 6px rgba(0,0,0,.28)}
+.booking-delete-btn:hover{background:#a11f2b;color:#fff}
+.booking-delete-btn svg{width:15px;height:15px;pointer-events:none}
+.confirm-overlay{position:fixed;inset:0;background:rgba(18,32,45,.58);display:none;align-items:center;justify-content:center;padding:18px;z-index:1000}
+.confirm-overlay.open{display:flex}
+.confirm-dialog{width:min(420px,100%);background:#fff;border-radius:10px;border:1px solid #c8d2d9;box-shadow:0 18px 50px rgba(0,0,0,.28);padding:20px}
+.confirm-dialog h3{margin:0 0 8px;color:var(--navy);font-size:19px}
+.confirm-dialog p{margin:0;color:#4e5f6b;line-height:1.45}
+.confirm-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}
+.confirm-actions button{min-width:96px}
+
 .day-track.dragging{outline:2px solid var(--yellow);outline-offset:-2px}
 .selection-panel{background:white;border:1px solid #cbd4db;border-radius:6px;box-shadow:0 2px 8px rgba(25,45,65,.08);overflow:hidden}
 .selection-panel .panel-title{display:flex;justify-content:space-between;align-items:center}
@@ -169,8 +180,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <div id="mobileNotice" style="display:none;background:#fff3cd;color:#5d4a00;padding:10px 18px;border-bottom:1px solid #e3cf83;font-size:13px"><strong>Using an iPhone?</strong> The Files or ChatGPT preview may not run the editor. Download the ZIP, extract it, then open <code>index.html</code> in a browser or upload it to a web host.</div>
 <div class="toolbar">
   <button id="newBtn" class="secondary">New timetable</button>
-  <button id="downloadBtn">Download bookings JSON</button>
-  <label class="file-label secondary">Upload bookings JSON<input id="uploadInput" type="file" accept="application/json,.json"></label>
+  <button id="downloadBtn">Save timetable</button>
+  <label class="file-label secondary">Upload timetable<input id="uploadInput" type="file" accept="application/json,.json"></label>
   <button id="printBtn" class="warning">Print / Save PDF</button>
   <span class="status" id="status">Ready</span>
 </div>
@@ -293,6 +304,17 @@ button:disabled{opacity:.55;cursor:not-allowed}
     </div></div>
   </section>
 </main>
+
+<div id="deleteConfirmOverlay" class="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle" aria-describedby="deleteConfirmText">
+  <div class="confirm-dialog">
+    <h3 id="deleteConfirmTitle">Delete booking?</h3>
+    <p id="deleteConfirmText">This booking will be permanently removed from the timetable.</p>
+    <div class="confirm-actions">
+      <button id="cancelDeleteBtn" type="button" class="secondary">Cancel</button>
+      <button id="confirmDeleteBtn" type="button" class="danger">Delete booking</button>
+    </div>
+  </div>
+</div>
 <script>
 const DEFAULT_DAYS=[
  {name:'Monday',open:'08:00',close:'22:00'},
@@ -396,10 +418,14 @@ function bind(){
  $('uploadInput').addEventListener('change',uploadJson);
  $('printBtn').addEventListener('click',()=>window.print());
  $('newBtn').addEventListener('click',()=>{if(confirm('Clear the current timetable and start again?')){state=freshState();selectedId=null;syncInputs();resetForm();saveAndRender()}});
+ $('cancelDeleteBtn').addEventListener('click',closeDeleteConfirm);
+ $('confirmDeleteBtn').addEventListener('click',confirmDeleteBooking);
+ $('deleteConfirmOverlay').addEventListener('click',e=>{if(e.target===$('deleteConfirmOverlay'))closeDeleteConfirm()});
+
  document.addEventListener('pointermove',onPointerMove,{passive:false});
  document.addEventListener('pointerup',endPointerDrag);
  document.addEventListener('pointercancel',endPointerDrag);
- document.addEventListener('keydown',e=>{if(!selected())return;if(e.key==='ArrowLeft'){e.preventDefault();nudgeTime(-SNAP)}else if(e.key==='ArrowRight'){e.preventDefault();nudgeTime(SNAP)}else if(e.key==='Delete'){removeBooking(selectedId)}});
+ document.addEventListener('keydown',e=>{if(!selected())return;if(e.key==='ArrowLeft'){e.preventDefault();nudgeTime(-SNAP)}else if(e.key==='ArrowRight'){e.preventDefault();nudgeTime(SNAP)}else if(e.key==='Delete'){removeBooking(selectedId)}else if(e.key==='Escape'&&$('deleteConfirmOverlay').classList.contains('open')){closeDeleteConfirm()}});
 }
 function applyCentrePreset(){const id=$('centreInput').value,p=CENTRES[id];if(!p)return;state.centreId=id;state.subtitle=p.subtitle;state.venueName=p.venueName;state.venueAddress=p.venueAddress;$('subtitleInput').value=p.subtitle;$('venueNameInput').value=p.venueName;$('venueAddressInput').value=p.venueAddress;saveAndRender()}
 function syncSettings(){state.centreId=$('centreInput').value;state.title=$('titleInput').value;state.subtitle=$('subtitleInput').value;state.venueName=$('venueNameInput').value;state.venueAddress=$('venueAddressInput').value;state.admissionsPolicy=$('admissionsPolicyInput').value;saveAndRender()}
@@ -505,7 +531,21 @@ function resetForm(){
 function editBooking(id){
  const b=state.bookings.find(x=>x.id===id);if(!b)return;selectBooking(id);$('bookingPanel').open=true;editId=id;$('dayInput').value=b.day;$('startInput').value=b.start;$('endInput').value=b.end;renderSessionTypeControls(b.sessionTypeId||'');$('sessionTypeInput').value=b.sessionTypeId||'';$('activityInput').value=b.activity;$('bookingColourInput').value=bookingColour(b);$('coverageModeInput').value=coverageMode(b);renderLanePicker(b.lanes);updateCoverageModeUI();$('saveBookingBtn').textContent='Update booking';$('cancelEditBtn').style.display='inline-block';$('bookingPanel').scrollIntoView({behavior:'smooth',block:'start'})
 }
-function removeBooking(id){if(!id)return;if(confirm('Delete this booking?')){state.bookings=state.bookings.filter(b=>b.id!==id);if(selectedId===id)selectedId=null;if(editId===id)resetForm();saveAndRender()}}
+let pendingDeleteId=null;
+function requestDeleteBooking(id){
+ if(!id)return;const b=state.bookings.find(x=>x.id===id);if(!b)return;
+ pendingDeleteId=id;
+ $('deleteConfirmTitle').textContent='Delete '+b.activity+'?';
+ $('deleteConfirmText').textContent=state.days[b.day].name+' · '+b.start+'–'+b.end+' will be permanently removed from the timetable.';
+ $('deleteConfirmOverlay').classList.add('open');
+ setTimeout(()=>$('cancelDeleteBtn').focus(),0);
+}
+function closeDeleteConfirm(){pendingDeleteId=null;$('deleteConfirmOverlay').classList.remove('open')}
+function confirmDeleteBooking(){
+ const id=pendingDeleteId;if(!id)return closeDeleteConfirm();
+ state.bookings=state.bookings.filter(b=>b.id!==id);if(selectedId===id)selectedId=null;if(editId===id)resetForm();closeDeleteConfirm();saveAndRender();
+}
+function removeBooking(id){requestDeleteBooking(id)}
 function selectBooking(id){selectedId=id;renderAll()}
 function updateBooking(id,patch,save=true){state.bookings=state.bookings.map(b=>b.id===id?{...b,...patch}:b);if(save)saveAndRender();else renderAll()}
 function nudgeTime(delta){const b=selected();if(!b)return;const d=state.days[b.day],duration=mins(b.end)-mins(b.start);let start=mins(b.start)+delta;start=clamp(start,mins(d.open),mins(d.close)-duration);updateBooking(b.id,{start:timeStr(start),end:timeStr(start+duration)})}
@@ -600,7 +640,7 @@ function renderSheet(){
     const boundaryLeft=(t-visibleStart)/(visibleEnd-visibleStart)*100;
     bookingLines+=`<span class="booking-grid-line${t%60===0?' major':''}" style="left:${boundaryLeft}%" aria-hidden="true"></span>`;
    }
-   html+=`<div class="booking-block${isSel?' selected':''}" data-booking-id="${b.id}" title="${escapeHtml(b.activity)} | ${b.start}-${b.end} | ${coverageMode(b)==='lanes'?`Lanes ${first}-${last}`:coverageMode(b)==='all'?'Whole pool':coverageMode(b)==='half-first'?'Lane 1 side half':'Opposite side half'}" style="left:${left}%;width:${width}%;top:${top}%;height:${height}%;background-color:${blockColour};color:${textColour(blockColour)}">${bookingLines}<span class="booking-content">${escapeHtml(b.activity)}<span class="lanes">${coverageMode(b)==='lanes'?`L${first}${last>first?'–L'+last:''}`:coverageMode(b)==='all'?'ALL':'½ POOL'}</span></span>${isSel?'<span class="drag-handle left" data-mode="resize-start"></span><span class="drag-handle right" data-mode="resize-end"></span>'+ (coverageMode(b)==='lanes'?'<span class="drag-handle top" data-mode="resize-top"></span><span class="drag-handle bottom" data-mode="resize-bottom"></span>':'') +'<button type="button" class="nudge-arrow prev" data-nudge="-15" aria-label="Move 15 minutes earlier">‹</button><button type="button" class="nudge-arrow next" data-nudge="15" aria-label="Move 15 minutes later">›</button>':''}</div>`;
+   html+=`<div class="booking-block${isSel?' selected':''}" data-booking-id="${b.id}" title="${escapeHtml(b.activity)} | ${b.start}-${b.end} | ${coverageMode(b)==='lanes'?`Lanes ${first}-${last}`:coverageMode(b)==='all'?'Whole pool':coverageMode(b)==='half-first'?'Lane 1 side half':'Opposite side half'}" style="left:${left}%;width:${width}%;top:${top}%;height:${height}%;background-color:${blockColour};color:${textColour(blockColour)}">${bookingLines}<span class="booking-content">${escapeHtml(b.activity)}</span>${isSel?'<span class="drag-handle left" data-mode="resize-start"></span><span class="drag-handle right" data-mode="resize-end"></span>'+ (coverageMode(b)==='lanes'?'<span class="drag-handle top" data-mode="resize-top"></span><span class="drag-handle bottom" data-mode="resize-bottom"></span>':'') +'<button type="button" class="nudge-arrow prev" data-nudge="-15" aria-label="Move 15 minutes earlier">‹</button><button type="button" class="nudge-arrow next" data-nudge="15" aria-label="Move 15 minutes later">›</button><button type="button" class="booking-delete-btn" data-delete-booking="'+b.id+'" aria-label="Delete '+escapeHtml(b.activity)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z"/></svg></button>':''}</div>`;
   });
   const laneLeft=pct(clamp(open,viewStart,viewEnd)-viewStart),laneRight=pct(viewEnd-clamp(close,viewStart,viewEnd));
   for(let lane=1;lane<state.laneCount;lane++)html+=`<div style="position:absolute;left:${laneLeft}%;right:${laneRight}%;top:${lane/state.laneCount*100}%;border-top:1px dashed rgba(66,82,94,.28);pointer-events:none;z-index:1"></div>`;
@@ -609,12 +649,13 @@ function renderSheet(){
  html+=`<div class="time-header bottom-time-header"><div class="corner">TIME</div><div class="time-track">${slotLines(true)}<div class="time-label start">${fmt(state.viewStart)}</div>`;
  for(let t=firstHour;t<viewEnd;t+=60)html+=`<div class="time-label" style="left:${pct(t-viewStart)}%">${fmt(timeStr(t))}</div>`;
  html+=`<div class="time-label end">${fmt(state.viewEnd)}</div></div></div></div><footer class="print-footer"><div class="policy-block"><strong>Admission policy</strong>${escapeHtml(state.admissionsPolicy||'')}</div><div class="address-block"><strong>${escapeHtml(state.venueName||'Venue')}</strong>${escapeHtml(state.venueAddress||'')}</div><div class="fslt-logo" aria-label="Fife Sports and Leisure Trust"><img src="fslt-logo.png" alt="Fife Sports and Leisure Trust logo"></div></footer>`;$('sheet').innerHTML=html;
- $('sheet').querySelectorAll('.booking-block[data-booking-id]').forEach(block=>{block.addEventListener('click',e=>{if(e.target.closest('[data-nudge]'))return;selectBooking(block.dataset.bookingId)});block.addEventListener('pointerdown',startPointerDrag)});
+ $('sheet').querySelectorAll('.booking-block[data-booking-id]').forEach(block=>{block.addEventListener('click',e=>{if(e.target.closest('[data-nudge], [data-delete-booking]'))return;selectBooking(block.dataset.bookingId)});block.addEventListener('pointerdown',startPointerDrag)});
  $('sheet').querySelectorAll('[data-nudge]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();nudgeTime(Number(btn.dataset.nudge))}));
+ $('sheet').querySelectorAll('[data-delete-booking]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();requestDeleteBooking(btn.dataset.deleteBooking)}));
 }
 function startPointerDrag(e){
  const block=e.currentTarget,id=block.dataset.bookingId,b=state.bookings.find(x=>x.id===id);if(!b)return;
- const mode=e.target.dataset.mode||'move';if(e.target.closest('[data-nudge]'))return;
+ const mode=e.target.dataset.mode||'move';if(e.target.closest('[data-nudge], [data-delete-booking]'))return;
  e.preventDefault();selectedId=id;
  const track=block.closest('.day-track'),rect=track.getBoundingClientRect();
  drag={id,mode,startX:e.clientX,startY:e.clientY,rect,original:{...b,lanes:[...b.lanes]},lastStepX:0,lastStepY:0};
@@ -638,8 +679,60 @@ function onPointerMove(e){
  updateBooking(drag.id,patch,false);
 }
 function endPointerDrag(){if(!drag)return;document.querySelectorAll('.day-track.dragging').forEach(x=>x.classList.remove('dragging'));drag=null;saveAndRender()}
-function downloadJson(){const data=JSON.stringify(state,null,2),blob=new Blob([data],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='pool-timetable-v8.json';a.click();URL.revokeObjectURL(url);$('status').textContent='JSON downloaded'}
-function uploadJson(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{const data=JSON.parse(r.result);if(!Array.isArray(data.bookings))throw new Error();normalizeState(data);selectedId=null;syncInputs();resetForm();saveAndRender();$('status').textContent='JSON uploaded'}catch(err){alert('That file is not a valid timetable JSON file.')}};r.readAsText(file);e.target.value=''}
+function safeFilenamePart(value){
+ return String(value||'')
+  .replace(/[<>:\"/\\|?*\u0000-\u001F]/g,'-')
+  .replace(/\s+/g,' ')
+  .replace(/-+/g,'-')
+  .trim()
+  .replace(/[. ]+$/g,'');
+}
+function suggestedTimetableFilename(){
+ const venue=safeFilenamePart(state.venueName||state.subtitle||'Pool');
+ const printedTitle=safeFilenamePart(state.title||'Timetable');
+ return `${venue||'Pool'}-${printedTitle||'Timetable'}.json`;
+}
+async function downloadJson(){
+ const data=JSON.stringify(state,null,2);
+ const blob=new Blob([data],{type:'application/json'});
+ const suggestedName=suggestedTimetableFilename();
+ try{
+  if('showSaveFilePicker' in window){
+   const handle=await window.showSaveFilePicker({
+    suggestedName,
+    types:[{description:'Pool timetable file',accept:{'application/json':['.json']}}]
+   });
+   const writable=await handle.createWritable();
+   await writable.write(blob);
+   await writable.close();
+   $('status').textContent=`Timetable saved as ${handle.name}`;
+   return;
+  }
+ }catch(err){
+  if(err&&err.name==='AbortError'){$('status').textContent='Save cancelled';return}
+  console.warn('Native save picker unavailable, using mobile/download fallback',err);
+ }
+ let filename=prompt('Name this timetable file:',suggestedName);
+ if(filename===null){$('status').textContent='Save cancelled';return}
+ filename=safeFilenamePart(filename)||suggestedName;
+ if(!filename.toLowerCase().endsWith('.json'))filename+='.json';
+ const file=new File([blob],filename,{type:'application/json'});
+ try{
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+   await navigator.share({files:[file],title:'Save timetable'});
+   $('status').textContent=`Timetable shared as ${filename}`;
+   return;
+  }
+ }catch(err){
+  if(err&&err.name==='AbortError'){$('status').textContent='Save cancelled';return}
+  console.warn('Share sheet unavailable, using browser download',err);
+ }
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ $('status').textContent=`Timetable downloaded as ${filename}`;
+}
+function uploadJson(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{const data=JSON.parse(r.result);if(!Array.isArray(data.bookings))throw new Error();normalizeState(data);selectedId=null;syncInputs();resetForm();saveAndRender();$('status').textContent=`Timetable uploaded: ${file.name}`}catch(err){alert('That file is not a valid timetable file.')}};r.readAsText(file);e.target.value=''}
 if(/iPhone|iPad|iPod/i.test(navigator.userAgent)) $('mobileNotice').style.display='block';
 init();
 </script>
