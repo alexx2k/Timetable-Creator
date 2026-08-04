@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pool Timetable Creator V9</title>
+<style>
+:root {
+  --navy:#163a5f;
+  --blue:#2e6f9e;
+  --light-blue:#dcebf5;
+  --yellow:#e5c547;
+  --paper:#ffffff;
+  --ink:#17212b;
+  --muted:#667583;
+  --line:#b9c4ce;
+  --panel:#f3f6f8;
+  --danger:#a63b3b;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#e9eef2;color:var(--ink)}
+button,input,select{font:inherit}
+.app-header{background:var(--navy);color:white;padding:18px 24px;border-bottom:6px solid var(--yellow)}
+.app-header h1{margin:0;font-size:25px;letter-spacing:.2px}
+.app-header p{margin:5px 0 0;color:#dce7ef;font-size:14px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;padding:14px 20px;background:white;border-bottom:1px solid #ccd5dc;position:sticky;top:0;z-index:10}
+button,.file-label{border:0;border-radius:4px;background:var(--blue);color:white;padding:9px 13px;cursor:pointer;font-weight:700}
+button.secondary,.file-label.secondary{background:#687b8a}
+button.warning{background:#af7730}
+button.danger{background:var(--danger)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.file-label input{display:none}
+.main{display:grid;grid-template-columns:350px minmax(0,1fr);gap:18px;padding:18px;align-items:start}
+.panel{background:white;border:1px solid #cbd4db;border-radius:6px;box-shadow:0 2px 8px rgba(25,45,65,.08);overflow:hidden}
+.panel-title{background:var(--navy);color:white;padding:11px 14px;font-size:16px;font-weight:700;border-bottom:4px solid var(--yellow)}
+.panel-body{padding:14px}
+.editor-stack{display:grid;gap:12px}
+.collapsible{background:white;border:1px solid #cbd4db;border-radius:6px;box-shadow:0 2px 8px rgba(25,45,65,.08);overflow:hidden}
+.collapsible summary{list-style:none;background:var(--navy);color:white;padding:12px 14px;font-size:16px;font-weight:700;border-bottom:4px solid var(--yellow);cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none}
+.collapsible summary::-webkit-details-marker{display:none}
+.collapsible summary::after{content:'+';font-size:22px;line-height:1;font-weight:400}
+.collapsible[open] summary::after{content:'−'}
+.collapsible[open] summary{border-bottom-color:var(--yellow)}
+.collapsible-body{padding:14px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;font-weight:700;margin-bottom:5px;color:#30414f}
+.field input,.field select{width:100%;padding:8px;border:1px solid #aebbc5;border-radius:4px;background:white}
+.inline-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.settings-subheading{margin:16px 0 9px;padding-bottom:5px;border-bottom:1px solid #ccd5dc;color:var(--navy);font-size:13px;text-transform:uppercase;letter-spacing:.35px}
+.hours-grid{display:grid;gap:7px}
+.hours-row{display:grid;grid-template-columns:88px 1fr 1fr;gap:8px;align-items:end;padding:7px;background:#f4f7f9;border:1px solid #d4dde3;border-radius:4px}
+.hours-day{font-size:12px;font-weight:800;color:#30414f;align-self:center}
+.hours-row .field{margin:0}
+.hours-row .field label{font-size:10px;margin-bottom:3px;color:#667583}
+.settings-warning{font-size:12px;line-height:1.4;color:#704d00;background:#fff4cf;border-left:4px solid var(--yellow);padding:8px;margin-top:9px;display:none}
+.color-field{display:grid;grid-template-columns:54px 1fr;gap:9px;align-items:center}
+.color-field input[type=color]{width:54px;height:40px;padding:3px;cursor:pointer}
+.session-types-list{display:grid;gap:8px;margin-top:12px}
+.session-type-row{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid #ccd6dd;background:#f7f9fa;border-radius:5px;padding:8px}
+.session-type-swatch{width:22px;height:22px;border-radius:4px;border:1px solid rgba(0,0,0,.28)}
+.session-type-copy strong{display:block;font-size:13px}
+.session-type-copy small{display:block;color:var(--muted);margin-top:2px}
+.session-type-actions{display:flex;gap:5px}.session-type-actions button{padding:5px 7px;font-size:11px}
+.lane-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:6px}
+.pool-area-note{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+.bottom-time-header{border-top:2px solid var(--navy)}
+.lane-check{display:flex;align-items:center;gap:6px;background:#eef3f6;padding:7px;border:1px solid #c9d3da;border-radius:4px;font-size:13px}
+.lane-check input{width:auto}
+.form-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.help{font-size:12px;line-height:1.4;color:var(--muted);background:#f2f5f7;border-left:4px solid var(--yellow);padding:9px;margin-top:12px}
+.bookings-list{max-height:310px;overflow:auto;border-top:1px solid #d5dde3;margin-top:14px;padding-top:10px}
+.booking-row{border:1px solid #cdd6dc;border-left:5px solid var(--blue);border-radius:4px;padding:8px;margin-bottom:8px;background:#fbfcfd}
+.booking-row strong{display:block;font-size:13px}
+.booking-row small{color:#5f6d78}
+.booking-row-actions{margin-top:7px;display:flex;gap:6px}
+.booking-row-actions button{padding:5px 8px;font-size:12px}
+.preview-panel{min-width:0}
+.preview-wrap{overflow:auto;background:#cfd7dd;padding:16px}
+.sheet{background:var(--paper);min-width:1050px;padding:18px 18px 14px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.sheet-heading{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:9px;border-bottom:3px solid var(--navy);padding-bottom:8px}
+.sheet-heading h2{margin:0;color:var(--navy);font-size:25px;text-transform:uppercase;letter-spacing:.4px}
+.sheet-heading .subtitle{font-weight:700;color:#4f5f6b;text-align:right}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 11px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700}
+.legend-swatch{width:17px;height:12px;border:1px solid rgba(0,0,0,.25)}
+.timetable{position:relative;border:2px solid var(--navy);background:white}
+.time-header,.day-row{display:grid;grid-template-columns:var(--day-column-width,92px) minmax(0,1fr)}
+.corner,.day-label{border-right:2px solid var(--navy)}
+.corner{background:var(--navy);color:white;padding:8px 6px;font-size:12px;font-weight:700}
+.time-track{position:relative;height:34px;background:#edf3f7;border-bottom:2px solid var(--navy);overflow:hidden}
+.time-label{position:absolute;top:0;z-index:3;height:100%;font-size:10px;padding:4px 3px 0;color:#324553;white-space:nowrap;pointer-events:none}
+.time-label.start{left:0;text-align:left}
+.time-label.end{left:auto;right:0;text-align:right}
+.slot-line{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed rgba(96,116,132,.25);pointer-events:none;z-index:0}
+.slot-line.major{border-left-style:solid;border-left-color:rgba(61,84,102,.42)}
+.time-track .slot-line{border-left-style:solid;border-left-color:rgba(87,108,124,.34);z-index:1}
+.day-row{min-height:74px;border-bottom:1px solid var(--navy)}
+.day-row:last-child{border-bottom:0}
+.day-label{background:#e9f0f5;padding:8px 7px;display:flex;flex-direction:column;justify-content:center;font-weight:800;color:var(--navy);font-size:13px}
+.day-label small{font-size:9px;color:#566775;margin-top:4px;font-weight:700}
+.day-track{position:relative;min-height:74px;background:white;overflow:hidden}
+.day-track.closed{background:#d9dde0}
+.closed-message{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:#5d6870;letter-spacing:1px;text-transform:uppercase}
+.booking-block{position:absolute;border:1px solid rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:10px;line-height:1.1;padding:2px;min-width:2px;cursor:grab;user-select:none;touch-action:none;z-index:2}
+.booking-block:active{cursor:grabbing}
+.booking-block.selected{outline:3px solid var(--navy);outline-offset:1px;z-index:8;overflow:visible}
+.booking-content{position:relative;z-index:3;pointer-events:none;overflow:hidden;width:100%}
+.booking-grid-line{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed rgba(20,49,72,.18);pointer-events:none;z-index:2}
+.booking-grid-line.major{border-left-style:solid;border-left-color:rgba(20,49,72,.3)}
+.drag-handle{position:absolute;z-index:10;background:var(--navy);border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.drag-handle.left,.drag-handle.right{top:50%;width:11px;height:28px;transform:translateY(-50%);cursor:ew-resize;border-radius:5px}
+.drag-handle.left{left:-6px}.drag-handle.right{right:-6px}
+.drag-handle.top,.drag-handle.bottom{left:50%;width:30px;height:9px;transform:translateX(-50%);cursor:ns-resize;border-radius:5px}
+.drag-handle.top{top:-5px}.drag-handle.bottom{bottom:-5px}
+.nudge-arrow{position:absolute;top:50%;transform:translateY(-50%);width:25px;height:25px;padding:0;border-radius:50%;background:white;color:var(--navy);border:2px solid var(--navy);display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;z-index:12}
+.nudge-arrow.prev{left:-34px}.nudge-arrow.next{right:-34px}
+.day-track.dragging{outline:2px solid var(--yellow);outline-offset:-2px}
+.selection-panel{background:white;border:1px solid #cbd4db;border-radius:6px;box-shadow:0 2px 8px rgba(25,45,65,.08);overflow:hidden}
+.selection-panel .panel-title{display:flex;justify-content:space-between;align-items:center}
+.selection-badge{font-size:11px;background:var(--yellow);color:#23313b;padding:3px 7px;border-radius:10px}
+.selection-empty{color:var(--muted);font-size:13px;line-height:1.45}
+.adjust-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.adjust-row{display:grid;grid-template-columns:38px 1fr 38px;gap:6px;align-items:center}
+.adjust-row button{padding:7px 4px}
+.adjust-value{text-align:center;border:1px solid #b7c3cc;background:#f5f7f8;border-radius:4px;padding:7px;font-weight:700;font-size:13px}
+.interaction-help{font-size:12px;color:var(--muted);line-height:1.45;margin-top:10px}
+.print-footer{margin-top:12px;border-top:3px solid var(--navy);padding-top:9px;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(220px,.8fr) auto;gap:14px;align-items:center;color:#263948}
+.policy-block{font-size:10px;line-height:1.35}
+.policy-block strong{display:block;color:var(--navy);font-size:11px;text-transform:uppercase;margin-bottom:2px}
+.address-block{font-size:10px;line-height:1.4;border-left:1px solid #aebbc5;padding-left:12px}
+.address-block strong{display:block;color:var(--navy);font-size:11px;margin-bottom:2px}
+.fslt-logo{display:flex;align-items:center;min-width:175px;justify-content:flex-end}
+.fslt-logo img{display:block;max-width:190px;width:190px;height:auto;object-fit:contain}
+@media print{.fslt-logo img{max-width:44mm;width:44mm}}
+.footer-field textarea{width:100%;min-height:72px;padding:8px;border:1px solid #aebbc5;border-radius:4px;background:white;font:inherit;resize:vertical}
+@media(max-width:600px){.print-footer{grid-template-columns:1fr}.address-block{border-left:0;border-top:1px solid #ccd5dc;padding:8px 0 0}.fslt-logo{justify-content:flex-start}}
+@media(max-width:600px){.main{padding:10px;gap:10px}.toolbar{padding:10px}.app-header{padding:14px}.panel-body,.collapsible-body{padding:11px}.lane-picker{grid-template-columns:repeat(2,1fr)}.hours-row{grid-template-columns:70px 1fr 1fr;gap:6px;padding:6px}.nudge-arrow.prev{left:-29px}.nudge-arrow.next{right:-29px}}
+.booking-block .lanes{display:block;font-size:8px;font-weight:700;margin-top:2px;opacity:.82}
+.empty-note{padding:30px;text-align:center;color:#71808c}
+.status{font-size:12px;color:#536571;margin-left:auto;align-self:center}
+@media(max-width:950px){.main{grid-template-columns:1fr}.toolbar{position:static}.sheet{min-width:980px}}
+@media print{
+  @page{size:A4 landscape;margin:8mm}
+  body{background:white}
+  .app-header,.toolbar,.editor-panel{display:none!important}
+  .main{display:block;padding:0}
+  .panel{border:0;box-shadow:none}
+  .panel-title{display:none}
+  .preview-wrap{padding:0;overflow:visible;background:white}
+  .sheet{box-shadow:none;min-width:0;width:100%;padding:0}
+  .sheet-heading h2{font-size:20px}
+  .timetable{width:100%}
+  .timetable{--day-column-width:72px}
+  .day-row{min-height:60px}
+  .day-track{min-height:60px}
+  .booking-block{font-size:8px}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .slot-line{border-left-width:.2mm}
+  .print-footer{break-inside:avoid;margin-top:3mm;padding-top:2mm;grid-template-columns:1.55fr .9fr auto;gap:4mm}
+  .policy-block,.address-block{font-size:7.5pt}.policy-block strong,.address-block strong{font-size:8pt}
+}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <h1>Pool Timetable Creator</h1>
+  <p>Create, edit, save and print a lane-based weekly pool timetable.</p>
+</header>
+<div id="mobileNotice" style="display:none;background:#fff3cd;color:#5d4a00;padding:10px 18px;border-bottom:1px solid #e3cf83;font-size:13px"><strong>Using an iPhone?</strong> The Files or ChatGPT preview may not run the editor. Download the ZIP, extract it, then open <code>index.html</code> in a browser or upload it to a web host.</div>
+<div class="toolbar">
+  <button id="newBtn" class="secondary">New timetable</button>
+  <button id="downloadBtn">Download bookings JSON</button>
+  <label class="file-label secondary">Upload bookings JSON<input id="uploadInput" type="file" accept="application/json,.json"></label>
+  <button id="printBtn" class="warning">Print / Save PDF</button>
+  <span class="status" id="status">Ready</span>
+</div>
+<main class="main">
+  <aside class="editor-panel editor-stack">
+    <details class="collapsible" open>
+      <summary>Timetable settings</summary>
+      <div class="collapsible-body">
+        <div class="field"><label for="titleInput">Printed title</label><input id="titleInput" value="Main Pool Timetable"></div>
+        <div class="field"><label for="subtitleInput">Subtitle / effective date</label><input id="subtitleInput" value="Weekly Programme"></div>
+        <h3 class="settings-subheading">Printed footer details</h3>
+        <div class="field"><label for="venueNameInput">Venue name</label><input id="venueNameInput" value="Waterstone Crook Sports Centre"></div>
+        <div class="field"><label for="venueAddressInput">Venue address</label><input id="venueAddressInput" value="Kirk Road, Newport-on-Tay, DD6 8HY"></div>
+        <div class="field footer-field"><label for="admissionsPolicyInput">Admissions policy / adult-to-child ratio</label><textarea id="admissionsPolicyInput">Children under 8 years must be accompanied by an adult aged 16 or over in the same water. Parent/child ratios: 1 adult to 2 children under 5 years, or 1 adult to 3 children aged 5–7 years.</textarea></div>
+        <div class="help">These details appear along the bottom of the printed timetable beside the Fife Sports and Leisure Trust wordmark.</div>
+        <div class="inline-fields">
+          <div class="field"><label for="laneCountInput">Number of lanes</label><input id="laneCountInput" type="number" min="1" max="12" value="4"></div>
+          <div class="field"><label for="intervalInput">Grid interval</label><select id="intervalInput"><option value="15">15 minutes</option><option value="30">30 minutes</option></select></div>
+        </div>
+
+        <h3 class="settings-subheading">Whole timetable view</h3>
+        <div class="inline-fields">
+          <div class="field"><label for="viewStartInput">View starts</label><input id="viewStartInput" type="time" step="900" value="07:00"></div>
+          <div class="field"><label for="viewEndInput">View finishes</label><input id="viewEndInput" type="time" step="900" value="22:00"></div>
+        </div>
+        <div class="help">This sets the shared horizontal time range shown across every day, for example 06:00–22:00 or 07:00–22:00.</div>
+
+        <h3 class="settings-subheading">Opening hours by day</h3>
+        <div class="hours-grid" id="openingHoursGrid">
+          <div class="hours-row" data-day-hours="0"><div class="hours-day">Monday</div><div class="field"><label for="open-0">Opens</label><input id="open-0" class="day-open" data-day="0" type="time" step="900" value="08:00"></div><div class="field"><label for="close-0">Closes</label><input id="close-0" class="day-close" data-day="0" type="time" step="900" value="22:00"></div></div>
+          <div class="hours-row" data-day-hours="1"><div class="hours-day">Tuesday</div><div class="field"><label for="open-1">Opens</label><input id="open-1" class="day-open" data-day="1" type="time" step="900" value="07:00"></div><div class="field"><label for="close-1">Closes</label><input id="close-1" class="day-close" data-day="1" type="time" step="900" value="21:00"></div></div>
+          <div class="hours-row" data-day-hours="2"><div class="hours-day">Wednesday</div><div class="field"><label for="open-2">Opens</label><input id="open-2" class="day-open" data-day="2" type="time" step="900" value="08:00"></div><div class="field"><label for="close-2">Closes</label><input id="close-2" class="day-close" data-day="2" type="time" step="900" value="21:00"></div></div>
+          <div class="hours-row" data-day-hours="3"><div class="hours-day">Thursday</div><div class="field"><label for="open-3">Opens</label><input id="open-3" class="day-open" data-day="3" type="time" step="900" value="07:00"></div><div class="field"><label for="close-3">Closes</label><input id="close-3" class="day-close" data-day="3" type="time" step="900" value="22:00"></div></div>
+          <div class="hours-row" data-day-hours="4"><div class="hours-day">Friday</div><div class="field"><label for="open-4">Opens</label><input id="open-4" class="day-open" data-day="4" type="time" step="900" value="08:30"></div><div class="field"><label for="close-4">Closes</label><input id="close-4" class="day-close" data-day="4" type="time" step="900" value="20:30"></div></div>
+          <div class="hours-row" data-day-hours="5"><div class="hours-day">Saturday</div><div class="field"><label for="open-5">Opens</label><input id="open-5" class="day-open" data-day="5" type="time" step="900" value="08:00"></div><div class="field"><label for="close-5">Closes</label><input id="close-5" class="day-close" data-day="5" type="time" step="900" value="14:30"></div></div>
+          <div class="hours-row" data-day-hours="6"><div class="hours-day">Sunday</div><div class="field"><label for="open-6">Opens</label><input id="open-6" class="day-open" data-day="6" type="time" step="900" value="08:00"></div><div class="field"><label for="close-6">Closes</label><input id="close-6" class="day-close" data-day="6" type="time" step="900" value="14:30"></div></div>
+        </div>
+        <div class="settings-warning" id="rangeWarning"></div>
+        <div class="help">Opening hours restrict when bookings can be placed. Time outside each day’s opening hours is marked CLOSED, while the overall view range stays the same for all seven days.</div>
+      </div>
+    </details>
+
+    <details class="collapsible" id="sessionTypesPanel">
+      <summary>Session types</summary>
+      <div class="collapsible-body">
+        <div class="field"><label for="sessionTypeNameInput">Session type name</label><input id="sessionTypeNameInput" placeholder="e.g. Lane Swimming"></div>
+        <div class="field"><label for="sessionTypeTitleInput">Default booking title</label><input id="sessionTypeTitleInput" placeholder="e.g. Lane Swimming"></div>
+        <div class="field"><label for="sessionTypeColourInput">Default colour</label><div class="color-field"><input id="sessionTypeColourInput" type="color" value="#86b6d8"><span class="help" style="margin:0">Used automatically when this session type is selected.</span></div></div>
+        <div class="form-actions">
+          <button id="saveSessionTypeBtn" type="button">Add session type</button>
+          <button id="cancelSessionTypeBtn" type="button" class="secondary" style="display:none">Cancel edit</button>
+        </div>
+        <div id="sessionTypesList" class="session-types-list"></div>
+        <div class="help">Session types provide a reusable default title and colour. Individual bookings can still override either value.</div>
+      </div>
+    </details>
+
+    <details class="collapsible" open id="bookingPanel">
+      <summary>Add booking</summary>
+      <div class="collapsible-body">
+        <div class="field"><label for="dayInput">Day</label><select id="dayInput">
+          <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
+        </select></div>
+        <div class="inline-fields">
+          <div class="field"><label for="startInput">Start</label><input id="startInput" type="time" step="900" value="08:00"></div>
+          <div class="field"><label for="endInput">End</label><input id="endInput" type="time" step="900" value="09:00"></div>
+        </div>
+        <div class="field"><label for="sessionTypeInput">Session type</label><select id="sessionTypeInput"></select></div>
+        <div class="field"><label for="activityInput">Booking title</label><input id="activityInput" placeholder="e.g. Lane Swimming"></div>
+        <div class="field"><label for="bookingColourInput">Booking colour</label><div class="color-field"><input id="bookingColourInput" type="color" value="#86b6d8"><span class="help" style="margin:0">Starts with the session type colour, but can be changed for this booking.</span></div></div>
+        <div class="field"><label for="coverageModeInput">Pool area</label><select id="coverageModeInput">
+          <option value="lanes">Selected lanes</option>
+          <option value="all">Whole pool</option>
+          <option value="half-first">Lane 1 side — exactly half</option>
+          <option value="half-second">Opposite side — exactly half</option>
+        </select><div class="pool-area-note">The two half-pool options divide the timetable row at its exact midpoint, so they also work correctly when the pool has an odd number of lanes.</div></div>
+        <div class="field" id="lanePickerField"><label>Lanes used</label><div id="lanePicker" class="lane-picker">
+          <label class="lane-check"><input type="checkbox" value="1"> Lane 1</label>
+          <label class="lane-check"><input type="checkbox" value="2"> Lane 2</label>
+          <label class="lane-check"><input type="checkbox" value="3"> Lane 3</label>
+          <label class="lane-check"><input type="checkbox" value="4"> Lane 4</label>
+        </div></div>
+        <div class="form-actions" id="lanePickerActions">
+          <button id="selectAllBtn" type="button" class="secondary">All lanes</button>
+          <button id="clearLanesBtn" type="button" class="secondary">Clear lanes</button>
+        </div>
+        <div class="form-actions">
+          <button id="saveBookingBtn" type="button">Add booking</button>
+          <button id="cancelEditBtn" type="button" class="secondary" style="display:none">Cancel edit</button>
+        </div>
+        <div class="help">Choose a reusable session type to fill the default title and colour, then choose either specific lanes, the whole pool, or one exact half. These choices are mutually exclusive.</div>
+        <div id="bookingsList" class="bookings-list"></div>
+      </div>
+    </details>
+
+    <section class="selection-panel" id="selectionPanel">
+      <div class="panel-title">Current booking <span class="selection-badge" id="selectionBadge">None selected</span></div>
+      <div class="panel-body" id="selectionBody">
+        <div class="selection-empty">Tap or click a booking in the timetable to select it. You can then drag it, resize its edges, or fine-tune it here.</div>
+      </div>
+    </section>
+  </aside>
+  <section class="panel preview-panel">
+    <div class="panel-title">Live print preview</div>
+    <div class="preview-wrap"><div class="sheet" id="sheet">
+      <div class="sheet-heading"><h2>Main Pool Timetable</h2><div class="subtitle">Weekly Programme</div></div>
+      <div class="timetable">
+        <div class="time-header"><div class="corner">DAY</div><div class="time-track"><div class="time-label start">7am</div><div class="time-label" style="left:20%">10am</div><div class="time-label" style="left:40%">1pm</div><div class="time-label" style="left:60%">4pm</div><div class="time-label" style="left:80%">7pm</div><div class="time-label end">10pm</div></div></div>
+        <div class="day-row"><div class="day-label">Monday<small>08:00 – 22:00</small></div><div class="day-track"></div></div>
+        <div class="day-row"><div class="day-label">Tuesday<small>07:00 – 21:00</small></div><div class="day-track"></div></div>
+        <div class="day-row"><div class="day-label">Wednesday<small>08:00 – 21:00</small></div><div class="day-track"></div></div>
+        <div class="day-row"><div class="day-label">Thursday<small>07:00 – 22:00</small></div><div class="day-track"></div></div>
+        <div class="day-row"><div class="day-label">Friday<small>08:30 – 20:30</small></div><div class="day-track"></div></div>
+        <div class="day-row"><div class="day-label">Saturday<small>08:00 – 14:30</small></div><div class="day-track"></div></div>
+        <div class="day-row"><div class="day-label">Sunday<small>08:00 – 14:30</small></div><div class="day-track"></div></div>
+      </div>
+      <noscript><div class="help" style="margin-top:12px">This preview is static because JavaScript is disabled. Open the downloaded HTML file in Safari, Chrome, Edge or Firefox to edit the timetable.</div></noscript>
+    </div></div>
+  </section>
+</main>
+<script>
+const DEFAULT_DAYS=[
+ {name:'Monday',open:'08:00',close:'22:00'},
+ {name:'Tuesday',open:'07:00',close:'21:00'},
+ {name:'Wednesday',open:'08:00',close:'21:00'},
+ {name:'Thursday',open:'07:00',close:'22:00'},
+ {name:'Friday',open:'08:30',close:'20:30'},
+ {name:'Saturday',open:'08:00',close:'14:30'},
+ {name:'Sunday',open:'08:00',close:'14:30'}
+];
+const LEGACY_COLOURS={
+ 'Public Swimming':'#86b6d8','Lane Swimming':'#b9dff5','Lessons':'#e69a73','Club Booking':'#d79aca','Aqua Class':'#91c9a8','Closed':'#c9ced2','Other':'#b4c4d2'
+};
+const DEFAULT_SESSION_TYPES=[
+ {id:'public-swimming',name:'Public Swimming',defaultTitle:'Public Swimming',colour:'#86b6d8'},
+ {id:'lane-swimming',name:'Lane Swimming',defaultTitle:'Lane Swimming',colour:'#b9dff5'},
+ {id:'lessons',name:'Lessons',defaultTitle:'Swimming Lessons',colour:'#e69a73'},
+ {id:'club-booking',name:'Club Booking',defaultTitle:'Club Booking',colour:'#d79aca'},
+ {id:'aqua-class',name:'Aqua Class',defaultTitle:'Aqua Class',colour:'#91c9a8'},
+ {id:'closure',name:'Pool Closure',defaultTitle:'CLOSED',colour:'#c9ced2'}
+];
+const SNAP=15;
+const freshState=()=>({
+ title:'Main Pool Timetable',subtitle:'Weekly Programme',venueName:'Waterstone Crook Sports Centre',venueAddress:'Kirk Road, Newport-on-Tay, DD6 8HY',admissionsPolicy:'Children under 8 years must be accompanied by an adult aged 16 or over in the same water. Parent/child ratios: 1 adult to 2 children under 5 years, or 1 adult to 3 children aged 5–7 years.',laneCount:4,interval:15,
+ viewStart:'07:00',viewEnd:'22:00',days:DEFAULT_DAYS.map(d=>({...d})),
+ sessionTypes:DEFAULT_SESSION_TYPES.map(t=>({...t})),bookings:[]
+});
+let state=freshState();
+let editId=null,selectedId=null,drag=null,sessionTypeEditId=null;
+const $=id=>document.getElementById(id);
+function mins(t){const [h,m]=String(t||'00:00').split(':').map(Number);return h*60+m}
+function timeStr(total){total=Math.max(0,Math.min(1439,Math.round(total)));return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`}
+function fmt(t){const [h,m]=t.split(':').map(Number);const ap=h>=12?'pm':'am';const hh=((h+11)%12)+1;return m?`${hh}:${String(m).padStart(2,'0')}${ap}`:`${hh}${ap}`}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
+function laneRange(lanes){const clean=[...new Set((lanes||[]).map(Number).filter(n=>n>=1&&n<=state.laneCount))].sort((a,b)=>a-b);if(!clean.length)return [];return Array.from({length:clean[clean.length-1]-clean[0]+1},(_,i)=>clean[0]+i)}
+function coverageMode(b){return ['all','half-first','half-second','lanes'].includes(b?.coverageMode)?b.coverageMode:'lanes'}
+function coverageBounds(b){const mode=coverageMode(b);if(mode==='all')return [0,100];if(mode==='half-first')return [0,50];if(mode==='half-second')return [50,100];const lanes=laneRange(b?.lanes||[]);if(!lanes.length)return [0,100];return [(lanes[0]-1)/state.laneCount*100,lanes[lanes.length-1]/state.laneCount*100]}
+function selected(){return state.bookings.find(b=>b.id===selectedId)||null}
+function validHex(value){return /^#[0-9a-f]{6}$/i.test(String(value||''))?String(value).toLowerCase():'#b4c4d2'}
+function sessionTypeById(id){return state.sessionTypes.find(t=>t.id===id)||null}
+function bookingColour(b){return validHex(b.colourHex||sessionTypeById(b.sessionTypeId)?.colour||LEGACY_COLOURS[b.colour]||'#b4c4d2')}
+function bookingTypeName(b){return sessionTypeById(b.sessionTypeId)?.name||b.sessionTypeName||b.colour||'Custom'}
+function textColour(hex){const h=validHex(hex).slice(1),r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);return (r*299+g*587+b*114)/1000>160?'#17212b':'#ffffff'}
+function normalizeState(candidate={}){
+ const base=freshState();
+ const savedDays=Array.isArray(candidate.days)?candidate.days:DEFAULT_DAYS;
+ const days=DEFAULT_DAYS.map((d,i)=>({name:d.name,open:savedDays[i]?.open||d.open,close:savedDays[i]?.close||d.close}));
+ const importedTypes=Array.isArray(candidate.sessionTypes)&&candidate.sessionTypes.length?candidate.sessionTypes:DEFAULT_SESSION_TYPES;
+ let sessionTypes=importedTypes.map((t,i)=>({
+  id:String(t.id||`session-${i+1}-${uid()}`),
+  name:String(t.name||t.defaultTitle||`Session ${i+1}`).trim(),
+  defaultTitle:String(t.defaultTitle||t.name||`Session ${i+1}`).trim(),
+  colour:validHex(t.colour)
+ })).filter(t=>t.name);
+ if(!sessionTypes.some(t=>t.id==='closure'||t.name.toLowerCase()==='pool closure'))sessionTypes.push({...DEFAULT_SESSION_TYPES.find(t=>t.id==='closure')});
+ const normalized={...base,...candidate,days,sessionTypes:sessionTypes.length?sessionTypes:DEFAULT_SESSION_TYPES.map(t=>({...t}))};
+ normalized.laneCount=clamp(Number(normalized.laneCount)||4,1,12);
+ normalized.interval=[15,30].includes(Number(normalized.interval))?Number(normalized.interval):15;
+ normalized.viewStart=normalized.viewStart||timeStr(Math.min(...days.map(d=>mins(d.open))));
+ if(!/^\d{2}:\d{2}$/.test(normalized.viewStart))normalized.viewStart='07:00';
+ normalized.viewEnd=normalized.viewEnd||'22:00';
+ if(!/^\d{2}:\d{2}$/.test(normalized.viewEnd))normalized.viewEnd='22:00';
+ if(mins(normalized.viewEnd)<=mins(normalized.viewStart)){normalized.viewStart='07:00';normalized.viewEnd='22:00'}
+ state=normalized;
+ state.bookings=Array.isArray(candidate.bookings)?candidate.bookings.map(b=>{
+  let typeId=b.sessionTypeId;
+  if(!typeId&&b.colour){typeId=state.sessionTypes.find(t=>t.name===b.colour)?.id||''}
+  const type=sessionTypeById(typeId);
+  const mode=['all','half-first','half-second','lanes'].includes(b.coverageMode)?b.coverageMode:'lanes';
+  const lanes=mode==='lanes'?laneRange(b.lanes):Array.from({length:state.laneCount},(_,i)=>i+1);
+  return {...b,id:b.id||uid(),day:clamp(Number(b.day)||0,0,6),lanes,coverageMode:mode,sessionTypeId:typeId||'',sessionTypeName:b.sessionTypeName||type?.name||b.colour||'Custom',colourHex:validHex(b.colourHex||type?.colour||LEGACY_COLOURS[b.colour])};
+ }).filter(b=>b.lanes.length):[];
+ return state;
+}
+function init(){
+ bind();loadAutosave();syncInputs();renderLanePicker();renderSessionTypeControls();resetForm();renderAll();
+}
+function bind(){
+ ['titleInput','subtitleInput'].forEach(id=>$(id).addEventListener('input',syncSettings));
+ $('laneCountInput').addEventListener('change',()=>{state.laneCount=clamp(Number($('laneCountInput').value)||1,1,12);$('laneCountInput').value=state.laneCount;state.bookings.forEach(b=>b.lanes=laneRange(b.lanes));renderLanePicker();saveAndRender()});
+ $('intervalInput').addEventListener('change',()=>{state.interval=Number($('intervalInput').value);saveAndRender()});
+ ['viewStartInput','viewEndInput'].forEach(id=>$(id).addEventListener('change',updateViewRange));
+ document.querySelectorAll('.day-open,.day-close').forEach(input=>input.addEventListener('change',updateDayHours));
+ $('selectAllBtn').addEventListener('click',()=>document.querySelectorAll('#lanePicker input').forEach(x=>x.checked=true));
+ $('clearLanesBtn').addEventListener('click',()=>document.querySelectorAll('#lanePicker input').forEach(x=>x.checked=false));
+ $('sessionTypeInput').addEventListener('change',applySelectedSessionType);
+ $('coverageModeInput').addEventListener('change',updateCoverageModeUI);
+ $('saveSessionTypeBtn').addEventListener('click',saveSessionType);
+ $('cancelSessionTypeBtn').addEventListener('click',resetSessionTypeForm);
+ $('saveBookingBtn').addEventListener('click',saveBooking);
+ $('cancelEditBtn').addEventListener('click',resetForm);
+ $('downloadBtn').addEventListener('click',downloadJson);
+ $('uploadInput').addEventListener('change',uploadJson);
+ $('printBtn').addEventListener('click',()=>window.print());
+ $('newBtn').addEventListener('click',()=>{if(confirm('Clear the current timetable and start again?')){state=freshState();selectedId=null;syncInputs();resetForm();saveAndRender()}});
+ document.addEventListener('pointermove',onPointerMove,{passive:false});
+ document.addEventListener('pointerup',endPointerDrag);
+ document.addEventListener('pointercancel',endPointerDrag);
+ document.addEventListener('keydown',e=>{if(!selected())return;if(e.key==='ArrowLeft'){e.preventDefault();nudgeTime(-SNAP)}else if(e.key==='ArrowRight'){e.preventDefault();nudgeTime(SNAP)}else if(e.key==='Delete'){removeBooking(selectedId)}});
+}
+function syncSettings(){state.title=$('titleInput').value;state.subtitle=$('subtitleInput').value;state.venueName=$('venueNameInput').value;state.venueAddress=$('venueAddressInput').value;state.admissionsPolicy=$('admissionsPolicyInput').value;saveAndRender()}
+function updateViewRange(e){
+ const proposedStart=$('viewStartInput').value,proposedEnd=$('viewEndInput').value;
+ if(!proposedStart||!proposedEnd||mins(proposedEnd)<=mins(proposedStart)){
+  alert('The timetable view finish must be later than its start.');
+  syncInputs();return;
+ }
+ state.viewStart=proposedStart;state.viewEnd=proposedEnd;saveAndRender();
+}
+function updateDayHours(e){
+ const day=Number(e.target.dataset.day),open=$(`open-${day}`).value,close=$(`close-${day}`).value;
+ if(!open||!close||mins(close)<=mins(open)){
+  alert(`${state.days[day].name}'s closing time must be later than its opening time.`);syncInputs();return;
+ }
+ const affected=state.bookings.filter(b=>b.day===day&&(mins(b.start)<mins(open)||mins(b.end)>mins(close)));
+ if(affected.length&&!confirm(`${affected.length} existing booking${affected.length===1?' is':'s are'} outside these new opening hours. Keep the new hours anyway?`)){syncInputs();return}
+ state.days[day].open=open;state.days[day].close=close;saveAndRender();
+}
+function updateRangeWarning(){
+ const outside=state.days.filter(d=>mins(d.open)<mins(state.viewStart)||mins(d.close)>mins(state.viewEnd));
+ const warning=$('rangeWarning');
+ if(outside.length){warning.style.display='block';warning.textContent=`The view range hides part of the opening hours for: ${outside.map(d=>d.name).join(', ')}. Bookings there still exist but will be clipped from the timetable display.`}
+ else{warning.style.display='none';warning.textContent=''}
+}
+function renderSessionTypeControls(selectedValue){
+ const select=$('sessionTypeInput');
+ const current=selectedValue!==undefined?selectedValue:select?.value;
+ select.innerHTML=state.sessionTypes.map(t=>`<option value="${escapeHtml(t.id)}">${escapeHtml(t.name)}</option>`).join('')+'<option value="">Custom / no type</option>';
+ if([...select.options].some(o=>o.value===current))select.value=current;else select.value=state.sessionTypes[0]?.id||'';
+ renderSessionTypesList();
+}
+function applySelectedSessionType(){
+ const type=sessionTypeById($('sessionTypeInput').value);
+ if(!type)return;
+ $('activityInput').value=type.defaultTitle;
+ $('bookingColourInput').value=type.colour;
+}
+function renderSessionTypesList(){
+ const list=$('sessionTypesList');
+ if(!state.sessionTypes.length){list.innerHTML='<div class="empty-note">No reusable session types yet.</div>';return}
+ list.innerHTML=state.sessionTypes.map(t=>`<div class="session-type-row"><span class="session-type-swatch" style="background:${t.colour}"></span><div class="session-type-copy"><strong>${escapeHtml(t.name)}</strong><small>Default title: ${escapeHtml(t.defaultTitle)}</small></div><div class="session-type-actions"><button type="button" data-edit-type="${escapeHtml(t.id)}">Edit</button><button type="button" class="danger" data-delete-type="${escapeHtml(t.id)}">Delete</button></div></div>`).join('');
+ list.querySelectorAll('[data-edit-type]').forEach(btn=>btn.addEventListener('click',()=>editSessionType(btn.dataset.editType)));
+ list.querySelectorAll('[data-delete-type]').forEach(btn=>btn.addEventListener('click',()=>deleteSessionType(btn.dataset.deleteType)));
+}
+function saveSessionType(){
+ const name=$('sessionTypeNameInput').value.trim(),defaultTitle=$('sessionTypeTitleInput').value.trim(),colour=validHex($('sessionTypeColourInput').value);
+ if(!name)return alert('Enter a session type name.');
+ if(!defaultTitle)return alert('Enter a default booking title.');
+ const duplicate=state.sessionTypes.find(t=>t.name.toLowerCase()===name.toLowerCase()&&t.id!==sessionTypeEditId);
+ if(duplicate)return alert('A session type with that name already exists.');
+ if(sessionTypeEditId){state.sessionTypes=state.sessionTypes.map(t=>t.id===sessionTypeEditId?{...t,name,defaultTitle,colour}:t)}
+ else state.sessionTypes.push({id:uid(),name,defaultTitle,colour});
+ const selectedType=sessionTypeEditId||state.sessionTypes[state.sessionTypes.length-1].id;
+ resetSessionTypeForm();renderSessionTypeControls(selectedType);saveAndRender();
+}
+function editSessionType(id){
+ const type=sessionTypeById(id);if(!type)return;sessionTypeEditId=id;$('sessionTypesPanel').open=true;$('sessionTypeNameInput').value=type.name;$('sessionTypeTitleInput').value=type.defaultTitle;$('sessionTypeColourInput').value=type.colour;$('saveSessionTypeBtn').textContent='Update session type';$('cancelSessionTypeBtn').style.display='inline-block';
+}
+function resetSessionTypeForm(){sessionTypeEditId=null;$('sessionTypeNameInput').value='';$('sessionTypeTitleInput').value='';$('sessionTypeColourInput').value='#86b6d8';$('saveSessionTypeBtn').textContent='Add session type';$('cancelSessionTypeBtn').style.display='none'}
+function deleteSessionType(id){
+ const type=sessionTypeById(id);if(!type)return;const used=state.bookings.filter(b=>b.sessionTypeId===id).length;
+ const message=used?`Delete ${type.name}? ${used} existing booking${used===1?'':'s'} will keep their current title and colour but become Custom.`:`Delete ${type.name}?`;
+ if(!confirm(message))return;
+ state.bookings=state.bookings.map(b=>b.sessionTypeId===id?{...b,sessionTypeId:'',sessionTypeName:type.name}:b);
+ state.sessionTypes=state.sessionTypes.filter(t=>t.id!==id);if(sessionTypeEditId===id)resetSessionTypeForm();renderSessionTypeControls();saveAndRender();
+}
+function renderLanePicker(selectedLanes=[]){
+ const box=$('lanePicker');box.innerHTML='';
+ for(let i=1;i<=state.laneCount;i++){
+  const label=document.createElement('label');label.className='lane-check';
+  label.innerHTML=`<input type="checkbox" value="${i}" ${selectedLanes.includes(i)?'checked':''}> Lane ${i}`;box.appendChild(label)
+ }
+}
+function updateCoverageModeUI(){
+ const mode=$('coverageModeInput').value;
+ const laneMode=mode==='lanes';
+ $('lanePickerField').style.display=laneMode?'block':'none';
+ $('lanePickerActions').style.display=laneMode?'flex':'none';
+ document.querySelectorAll('#lanePicker input').forEach(input=>{
+  input.disabled=!laneMode;
+  if(!laneMode)input.checked=false;
+ });
+}
+function saveBooking(){
+ const day=Number($('dayInput').value),start=$('startInput').value,end=$('endInput').value,activity=$('activityInput').value.trim(),sessionTypeId=$('sessionTypeInput').value;
+ const coverageMode=$('coverageModeInput').value;
+ let lanes=coverageMode==='lanes'?[...document.querySelectorAll('#lanePicker input:checked')].map(x=>Number(x.value)):Array.from({length:state.laneCount},(_,i)=>i+1);lanes=laneRange(lanes);
+ if(!activity)return alert('Enter a booking title.');
+ if(mins(end)<=mins(start))return alert('The end time must be later than the start time.');
+ if(coverageMode==='lanes'&&!lanes.length)return alert('Select at least one lane.');
+ const d=state.days[day];if(mins(start)<mins(d.open)||mins(end)>mins(d.close))return alert(`This booking must be within ${d.name}'s opening hours (${d.open}–${d.close}).`);
+ const type=sessionTypeById(sessionTypeId);
+ const booking={id:editId||uid(),day,start,end,activity,lanes,coverageMode,sessionTypeId:sessionTypeId||'',sessionTypeName:type?.name||'Custom',colourHex:validHex($('bookingColourInput').value)};
+ if(editId){state.bookings=state.bookings.map(b=>b.id===editId?booking:b);selectedId=booking.id}else{state.bookings.push(booking);selectedId=booking.id}
+ resetForm();saveAndRender();
+}
+function resetForm(){
+ editId=null;$('saveBookingBtn').textContent='Add booking';$('cancelEditBtn').style.display='none';$('coverageModeInput').value='lanes';renderLanePicker();updateCoverageModeUI();renderSessionTypeControls(state.sessionTypes[0]?.id||'');
+ const type=sessionTypeById($('sessionTypeInput').value);$('activityInput').value=type?.defaultTitle||'';$('bookingColourInput').value=type?.colour||'#b4c4d2';
+}
+function editBooking(id){
+ const b=state.bookings.find(x=>x.id===id);if(!b)return;selectBooking(id);$('bookingPanel').open=true;editId=id;$('dayInput').value=b.day;$('startInput').value=b.start;$('endInput').value=b.end;renderSessionTypeControls(b.sessionTypeId||'');$('sessionTypeInput').value=b.sessionTypeId||'';$('activityInput').value=b.activity;$('bookingColourInput').value=bookingColour(b);$('coverageModeInput').value=coverageMode(b);renderLanePicker(b.lanes);updateCoverageModeUI();$('saveBookingBtn').textContent='Update booking';$('cancelEditBtn').style.display='inline-block';$('bookingPanel').scrollIntoView({behavior:'smooth',block:'start'})
+}
+function removeBooking(id){if(!id)return;if(confirm('Delete this booking?')){state.bookings=state.bookings.filter(b=>b.id!==id);if(selectedId===id)selectedId=null;if(editId===id)resetForm();saveAndRender()}}
+function selectBooking(id){selectedId=id;renderAll()}
+function updateBooking(id,patch,save=true){state.bookings=state.bookings.map(b=>b.id===id?{...b,...patch}:b);if(save)saveAndRender();else renderAll()}
+function nudgeTime(delta){const b=selected();if(!b)return;const d=state.days[b.day],duration=mins(b.end)-mins(b.start);let start=mins(b.start)+delta;start=clamp(start,mins(d.open),mins(d.close)-duration);updateBooking(b.id,{start:timeStr(start),end:timeStr(start+duration)})}
+function moveLane(delta){const b=selected();if(!b||coverageMode(b)!=='lanes')return;const span=b.lanes.length;let first=clamp(b.lanes[0]+delta,1,state.laneCount-span+1);updateBooking(b.id,{lanes:Array.from({length:span},(_,i)=>first+i)})}
+function saveAndRender(){try{localStorage.setItem('poolTimetableCreatorV11',JSON.stringify(state))}catch(e){}renderAll();$('status').textContent='Saved in this browser'}
+function loadAutosave(){let raw=null;try{raw=localStorage.getItem('poolTimetableCreatorV11')||localStorage.getItem('poolTimetableCreatorV9')||localStorage.getItem('poolTimetableCreatorV8')||localStorage.getItem('poolTimetableCreatorV7')||localStorage.getItem('poolTimetableCreatorV6')||localStorage.getItem('poolTimetableCreatorV6')||localStorage.getItem('poolTimetableCreatorV5')||localStorage.getItem('poolTimetableCreatorV4')||localStorage.getItem('poolTimetableCreatorV3')||localStorage.getItem('poolTimetableCreator')}catch(e){}if(!raw)return;try{const saved=JSON.parse(raw);if(saved&&Array.isArray(saved.bookings)){normalizeState(saved);$('status').textContent='Restored saved timetable'}}catch(e){}}
+function syncInputs(){
+ $('titleInput').value=state.title;$('subtitleInput').value=state.subtitle;$('laneCountInput').value=state.laneCount;$('intervalInput').value=state.interval;
+ $('viewStartInput').value=state.viewStart;$('viewEndInput').value=state.viewEnd;
+ state.days.forEach((d,i)=>{$(`open-${i}`).value=d.open;$(`close-${i}`).value=d.close});renderSessionTypeControls();updateRangeWarning();
+}
+function renderAll(){updateRangeWarning();renderSessionTypesList();renderList();renderSelectionPanel();renderSheet()}
+function renderList(){
+ const list=$('bookingsList');const arr=[...state.bookings].sort((a,b)=>a.day-b.day||mins(a.start)-mins(b.start));
+ if(!arr.length){list.innerHTML='<div class="empty-note">No bookings added yet.</div>';return}
+ list.innerHTML=arr.map(b=>`<div class="booking-row" style="border-left-color:${bookingColour(b)}"><strong>${escapeHtml(state.days[b.day].name)} · ${escapeHtml(b.activity)}</strong><small>${escapeHtml(bookingTypeName(b))} · ${b.start}–${b.end} · ${coverageMode(b)==='lanes'?`Lane${b.lanes.length>1?'s':''} ${b.lanes[0]}${b.lanes.length>1?'–'+b.lanes[b.lanes.length-1]:''}`:coverageMode(b)==='all'?'Whole pool':coverageMode(b)==='half-first'?'Lane 1 side half':'Opposite side half'}</small><div class="booking-row-actions"><button type="button" data-select="${b.id}">Select</button><button type="button" data-edit="${b.id}">Edit form</button><button type="button" class="danger" data-delete="${b.id}">Delete</button></div></div>`).join('');
+ list.querySelectorAll('[data-select]').forEach(x=>x.addEventListener('click',()=>selectBooking(x.dataset.select)));
+ list.querySelectorAll('[data-edit]').forEach(x=>x.addEventListener('click',()=>editBooking(x.dataset.edit)));
+ list.querySelectorAll('[data-delete]').forEach(x=>x.addEventListener('click',()=>removeBooking(x.dataset.delete)));
+}
+function renderSelectionPanel(){
+ const b=selected(),body=$('selectionBody'),badge=$('selectionBadge');
+ if(!b){badge.textContent='None selected';body.innerHTML='<div class="selection-empty">Tap or click a booking in the timetable to select it. You can then drag it, resize its edges, or fine-tune it here.</div>';return}
+ badge.textContent='Selected';
+ body.innerHTML=`
+  <div class="field"><label for="fineActivity">Activity</label><input id="fineActivity" value="${escapeHtml(b.activity)}"></div>
+  <div class="field"><label for="fineDay">Day</label><select id="fineDay">${state.days.map((d,i)=>`<option value="${i}" ${i===b.day?'selected':''}>${d.name}</option>`).join('')}</select></div>
+  <div class="field"><label for="fineCoverageMode">Pool area</label><select id="fineCoverageMode"><option value="lanes" ${coverageMode(b)==='lanes'?'selected':''}>Selected lanes</option><option value="all" ${coverageMode(b)==='all'?'selected':''}>Whole pool</option><option value="half-first" ${coverageMode(b)==='half-first'?'selected':''}>Lane 1 side — exactly half</option><option value="half-second" ${coverageMode(b)==='half-second'?'selected':''}>Opposite side — exactly half</option></select></div>
+  <div class="adjust-grid">
+   <div class="field"><label for="fineStart">Start time</label><input id="fineStart" type="time" step="900" value="${b.start}"></div>
+   <div class="field"><label for="fineEnd">Finish time</label><input id="fineEnd" type="time" step="900" value="${b.end}"></div>
+   <div class="field fine-lane-field"><label for="fineFirstLane">First lane</label><input id="fineFirstLane" type="number" min="1" max="${state.laneCount}" value="${b.lanes[0]}"></div>
+   <div class="field fine-lane-field"><label for="fineLastLane">Last lane</label><input id="fineLastLane" type="number" min="1" max="${state.laneCount}" value="${b.lanes[b.lanes.length-1]}"></div>
+  </div>
+  <div class="field"><label for="fineSessionType">Session type</label><select id="fineSessionType">${state.sessionTypes.map(t=>`<option value="${escapeHtml(t.id)}" ${t.id===b.sessionTypeId?'selected':''}>${escapeHtml(t.name)}</option>`).join('')}<option value="" ${!b.sessionTypeId?'selected':''}>Custom / no type</option></select></div>
+  <div class="field"><label for="fineColour">Colour</label><div class="color-field"><input id="fineColour" type="color" value="${bookingColour(b)}"><span class="help" style="margin:0">Fine-tune this booking’s colour.</span></div></div>
+  <div class="adjust-row"><button type="button" id="timeBack">←</button><div class="adjust-value">Move 15 minutes</div><button type="button" id="timeForward">→</button></div>
+  <div class="adjust-row" style="margin-top:7px"><button type="button" id="laneUp">↑</button><div class="adjust-value">Move lane range</div><button type="button" id="laneDown">↓</button></div>
+  <div class="form-actions"><button type="button" id="fineApply">Apply exact values</button><button type="button" id="fineEdit" class="secondary">Open add/edit form</button><button type="button" id="fineDelete" class="danger">Delete</button></div>
+  <div class="interaction-help"><strong>On the timetable:</strong> drag the middle to move; drag the left/right handles to change start or finish; drag the top/bottom handles to change the lane range. Everything snaps to 15 minutes or one lane.</div>`;
+ $('timeBack').addEventListener('click',()=>nudgeTime(-SNAP));$('timeForward').addEventListener('click',()=>nudgeTime(SNAP));$('laneUp').addEventListener('click',()=>moveLane(-1));$('laneDown').addEventListener('click',()=>moveLane(1));$('fineEdit').addEventListener('click',()=>editBooking(b.id));$('fineDelete').addEventListener('click',()=>removeBooking(b.id));
+ const updateFineCoverageUI=()=>{
+  const laneMode=$('fineCoverageMode').value==='lanes';
+  document.querySelectorAll('.fine-lane-field').forEach(field=>field.style.display=laneMode?'block':'none');
+  ['fineFirstLane','fineLastLane'].forEach(id=>$(id).disabled=!laneMode);
+  $('laneUp').disabled=!laneMode;$('laneDown').disabled=!laneMode;
+ };
+ $('fineCoverageMode').addEventListener('change',updateFineCoverageUI);updateFineCoverageUI();
+ $('fineSessionType').addEventListener('change',()=>{const type=sessionTypeById($('fineSessionType').value);if(type){$('fineActivity').value=type.defaultTitle;$('fineColour').value=type.colour}});
+ $('fineApply').addEventListener('click',()=>{
+  const day=Number($('fineDay').value),start=$('fineStart').value,end=$('fineEnd').value,first=clamp(Number($('fineFirstLane').value)||1,1,state.laneCount),last=clamp(Number($('fineLastLane').value)||first,first,state.laneCount),coverageMode=$('fineCoverageMode').value,d=state.days[day];
+  if(mins(end)<=mins(start))return alert('Finish time must be after start time.');if(mins(start)<mins(d.open)||mins(end)>mins(d.close))return alert(`Times must be within ${d.name}'s opening hours.`);
+  const sessionTypeId=$('fineSessionType').value,type=sessionTypeById(sessionTypeId);
+  updateBooking(b.id,{activity:$('fineActivity').value.trim()||b.activity,day,start,end,coverageMode,lanes:coverageMode==='lanes'?Array.from({length:last-first+1},(_,i)=>first+i):Array.from({length:state.laneCount},(_,i)=>i+1),sessionTypeId,sessionTypeName:type?.name||'Custom',colourHex:validHex($('fineColour').value)});
+ });
+}
+function renderSheet(){
+ const viewStart=mins(state.viewStart),viewEnd=mins(state.viewEnd),range=viewEnd-viewStart;
+ const slots=Math.max(1,Math.round(range/state.interval));
+ const pct=value=>value/range*100;
+ const slotLines=(headerOnly=false)=>{
+  let lines='';
+  for(let i=1;i<slots;i++){
+   const t=viewStart+i*state.interval;
+   const major=t%60===0;
+   if(headerOnly&&!major)continue;
+   lines+=`<span class="slot-line${major?' major':''}" style="left:${pct(i*state.interval)}%" aria-hidden="true"></span>`;
+  }
+  return lines;
+ };
+ const legend=[...new Map(state.bookings.map(b=>{const colour=bookingColour(b),label=bookingTypeName(b);return [`${label}|${colour}`,{label,colour}]})).values()];
+ let html=`<div class="sheet-heading"><h2>${escapeHtml(state.title||'Pool Timetable')}</h2><div class="subtitle">${escapeHtml(state.subtitle||'')}</div></div>`;
+ if(legend.length)html+=`<div class="legend">${legend.map(item=>`<div class="legend-item"><span class="legend-swatch" style="background:${item.colour}"></span>${escapeHtml(item.label)}</div>`).join('')}</div>`;
+ html+=`<div class="timetable"><div class="time-header"><div class="corner">DAY</div><div class="time-track">${slotLines(true)}`;
+ html+=`<div class="time-label start">${fmt(state.viewStart)}</div>`;
+ const firstHour=Math.ceil((viewStart+1)/60)*60;
+ for(let t=firstHour;t<viewEnd;t+=60)html+=`<div class="time-label" style="left:${pct(t-viewStart)}%">${fmt(timeStr(t))}</div>`;
+ html+=`<div class="time-label end">${fmt(state.viewEnd)}</div></div></div>`;
+ state.days.forEach((d,di)=>{
+  const open=mins(d.open),close=mins(d.close),dayBookings=state.bookings.filter(b=>b.day===di);
+  html+=`<div class="day-row"><div class="day-label">${d.name}<small>${d.open} – ${d.close}</small></div><div class="day-track" data-day="${di}">${slotLines(false)}`;
+  const beforeEnd=clamp(open,viewStart,viewEnd);if(beforeEnd>viewStart)html+=`<div class="booking-block" style="left:0;width:${pct(beforeEnd-viewStart)}%;top:0;height:100%;background:#d7dcdf;color:#68737b;cursor:default;z-index:1">CLOSED</div>`;
+  const afterStart=clamp(close,viewStart,viewEnd);if(afterStart<viewEnd)html+=`<div class="booking-block" style="left:${pct(afterStart-viewStart)}%;width:${pct(viewEnd-afterStart)}%;top:0;height:100%;background:#d7dcdf;color:#68737b;cursor:default;z-index:1">CLOSED</div>`;
+  dayBookings.forEach(b=>{
+   const rawStart=mins(b.start),rawEnd=mins(b.end);if(rawEnd<=viewStart||rawStart>=viewEnd)return;
+   const visibleStart=Math.max(rawStart,viewStart),visibleEnd=Math.min(rawEnd,viewEnd),left=pct(visibleStart-viewStart),width=pct(visibleEnd-visibleStart),first=b.lanes[0]||1,last=b.lanes[b.lanes.length-1]||state.laneCount,[top,bottom]=coverageBounds(b),height=bottom-top,isSel=b.id===selectedId;
+   const blockColour=bookingColour(b);
+   let bookingLines='';
+   const firstBoundary=Math.ceil(visibleStart/state.interval)*state.interval;
+   for(let t=firstBoundary;t<visibleEnd;t+=state.interval){
+    if(t<=visibleStart)continue;
+    const boundaryLeft=(t-visibleStart)/(visibleEnd-visibleStart)*100;
+    bookingLines+=`<span class="booking-grid-line${t%60===0?' major':''}" style="left:${boundaryLeft}%" aria-hidden="true"></span>`;
+   }
+   html+=`<div class="booking-block${isSel?' selected':''}" data-booking-id="${b.id}" title="${escapeHtml(b.activity)} | ${b.start}-${b.end} | ${coverageMode(b)==='lanes'?`Lanes ${first}-${last}`:coverageMode(b)==='all'?'Whole pool':coverageMode(b)==='half-first'?'Lane 1 side half':'Opposite side half'}" style="left:${left}%;width:${width}%;top:${top}%;height:${height}%;background-color:${blockColour};color:${textColour(blockColour)}">${bookingLines}<span class="booking-content">${escapeHtml(b.activity)}<span class="lanes">${coverageMode(b)==='lanes'?`L${first}${last>first?'–L'+last:''}`:coverageMode(b)==='all'?'ALL':'½ POOL'}</span></span>${isSel?'<span class="drag-handle left" data-mode="resize-start"></span><span class="drag-handle right" data-mode="resize-end"></span>'+ (coverageMode(b)==='lanes'?'<span class="drag-handle top" data-mode="resize-top"></span><span class="drag-handle bottom" data-mode="resize-bottom"></span>':'') +'<button type="button" class="nudge-arrow prev" data-nudge="-15" aria-label="Move 15 minutes earlier">‹</button><button type="button" class="nudge-arrow next" data-nudge="15" aria-label="Move 15 minutes later">›</button>':''}</div>`;
+  });
+  const laneLeft=pct(clamp(open,viewStart,viewEnd)-viewStart),laneRight=pct(viewEnd-clamp(close,viewStart,viewEnd));
+  for(let lane=1;lane<state.laneCount;lane++)html+=`<div style="position:absolute;left:${laneLeft}%;right:${laneRight}%;top:${lane/state.laneCount*100}%;border-top:1px dashed rgba(66,82,94,.28);pointer-events:none;z-index:1"></div>`;
+  html+=`</div></div>`;
+ });
+ html+=`<div class="time-header bottom-time-header"><div class="corner">TIME</div><div class="time-track">${slotLines(true)}<div class="time-label start">${fmt(state.viewStart)}</div>`;
+ for(let t=firstHour;t<viewEnd;t+=60)html+=`<div class="time-label" style="left:${pct(t-viewStart)}%">${fmt(timeStr(t))}</div>`;
+ html+=`<div class="time-label end">${fmt(state.viewEnd)}</div></div></div></div><footer class="print-footer"><div class="policy-block"><strong>Admission policy</strong>${escapeHtml(state.admissionsPolicy||'')}</div><div class="address-block"><strong>${escapeHtml(state.venueName||'Venue')}</strong>${escapeHtml(state.venueAddress||'')}</div><div class="fslt-logo" aria-label="Fife Sports and Leisure Trust"><img src="fslt-logo.png" alt="Fife Sports and Leisure Trust logo"></div></footer>`;$('sheet').innerHTML=html;
+ $('sheet').querySelectorAll('.booking-block[data-booking-id]').forEach(block=>{block.addEventListener('click',e=>{if(e.target.closest('[data-nudge]'))return;selectBooking(block.dataset.bookingId)});block.addEventListener('pointerdown',startPointerDrag)});
+ $('sheet').querySelectorAll('[data-nudge]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();nudgeTime(Number(btn.dataset.nudge))}));
+}
+function startPointerDrag(e){
+ const block=e.currentTarget,id=block.dataset.bookingId,b=state.bookings.find(x=>x.id===id);if(!b)return;
+ const mode=e.target.dataset.mode||'move';if(e.target.closest('[data-nudge]'))return;
+ e.preventDefault();selectedId=id;
+ const track=block.closest('.day-track'),rect=track.getBoundingClientRect();
+ drag={id,mode,startX:e.clientX,startY:e.clientY,rect,original:{...b,lanes:[...b.lanes]},lastStepX:0,lastStepY:0};
+ try{block.setPointerCapture(e.pointerId)}catch(_){ }
+ track.classList.add('dragging');renderSelectionPanel();
+}
+function onPointerMove(e){
+ if(!drag)return;e.preventDefault();
+ const b=state.bookings.find(x=>x.id===drag.id);if(!b)return;
+ const d=state.days[drag.original.day],viewRange=mins(state.viewEnd)-mins(state.viewStart),dx=e.clientX-drag.startX,dy=e.clientY-drag.startY;
+ const stepX=Math.round((dx/drag.rect.width*viewRange)/SNAP),stepY=Math.round(dy/(drag.rect.height/state.laneCount));
+ if(stepX===drag.lastStepX&&stepY===drag.lastStepY)return;drag.lastStepX=stepX;drag.lastStepY=stepY;
+ const o=drag.original,duration=mins(o.end)-mins(o.start),first=o.lanes[0],last=o.lanes[o.lanes.length-1],span=o.lanes.length;
+ let patch={};
+ if(drag.mode==='move'){
+  let st=clamp(mins(o.start)+stepX*SNAP,mins(d.open),mins(d.close)-duration);let f=clamp(first+stepY,1,state.laneCount-span+1);patch={start:timeStr(st),end:timeStr(st+duration),lanes:Array.from({length:span},(_,i)=>f+i)};
+ }else if(drag.mode==='resize-start'){patch={start:timeStr(clamp(mins(o.start)+stepX*SNAP,mins(d.open),mins(o.end)-SNAP))}}
+ else if(drag.mode==='resize-end'){patch={end:timeStr(clamp(mins(o.end)+stepX*SNAP,mins(o.start)+SNAP,mins(d.close)))}}
+ else if(drag.mode==='resize-top'){let f=clamp(first+stepY,1,last);patch={lanes:Array.from({length:last-f+1},(_,i)=>f+i)}}
+ else if(drag.mode==='resize-bottom'){let l=clamp(last+stepY,first,state.laneCount);patch={lanes:Array.from({length:l-first+1},(_,i)=>first+i)}};
+ updateBooking(drag.id,patch,false);
+}
+function endPointerDrag(){if(!drag)return;document.querySelectorAll('.day-track.dragging').forEach(x=>x.classList.remove('dragging'));drag=null;saveAndRender()}
+function downloadJson(){const data=JSON.stringify(state,null,2),blob=new Blob([data],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='pool-timetable-v8.json';a.click();URL.revokeObjectURL(url);$('status').textContent='JSON downloaded'}
+function uploadJson(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{const data=JSON.parse(r.result);if(!Array.isArray(data.bookings))throw new Error();normalizeState(data);selectedId=null;syncInputs();resetForm();saveAndRender();$('status').textContent='JSON uploaded'}catch(err){alert('That file is not a valid timetable JSON file.')}};r.readAsText(file);e.target.value=''}
+if(/iPhone|iPad|iPod/i.test(navigator.userAgent)) $('mobileNotice').style.display='block';
+init();
+</script>
+</body>
+</html>
