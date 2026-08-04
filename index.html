@@ -94,12 +94,12 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .corner,.day-label{border-right:2px solid var(--navy)}
 .corner{background:var(--navy);color:white;padding:8px 6px;font-size:12px;font-weight:700}
 .time-track{position:relative;height:34px;background:#edf3f7;border-bottom:2px solid var(--navy);overflow:hidden}
-.time-label{position:absolute;top:0;z-index:3;width:42px;height:18px;transform:translateX(-50%);display:flex;align-items:flex-start;justify-content:center;font-size:10px;padding-top:4px;color:#324553;white-space:nowrap;text-align:center;pointer-events:none}
-.time-label.start{left:0;transform:none;justify-content:flex-start;text-align:left}
-.time-label.end{left:100%;right:auto;transform:translateX(-100%);justify-content:flex-end;text-align:right}
-.slot-line{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed rgba(96,116,132,.16);pointer-events:none;z-index:0}
-.slot-line.major{border-left-style:solid;border-left-color:rgba(61,84,102,.28)}
-.time-track .slot-line{top:18px;border-left-style:solid;border-left-color:rgba(87,108,124,.34);z-index:1}
+.time-label{position:absolute;top:0;z-index:3;height:100%;font-size:10px;padding:4px 3px 0;color:#324553;white-space:nowrap;pointer-events:none}
+.time-label.start{left:0;text-align:left}
+.time-label.end{left:auto;right:0;text-align:right}
+.slot-line{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed rgba(96,116,132,.25);pointer-events:none;z-index:0}
+.slot-line.major{border-left-style:solid;border-left-color:rgba(61,84,102,.42)}
+.time-track .slot-line{border-left-style:solid;border-left-color:rgba(87,108,124,.34);z-index:1}
 .day-row{min-height:74px;border-bottom:1px solid var(--navy)}
 .day-row:last-child{border-bottom:0}
 .day-label{background:#e9f0f5;padding:8px 7px;display:flex;flex-direction:column;justify-content:center;font-weight:800;color:var(--navy);font-size:13px}
@@ -110,10 +110,9 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .booking-block{position:absolute;border:1px solid rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:10px;line-height:1.1;padding:2px;min-width:2px;cursor:grab;user-select:none;touch-action:none;z-index:2}
 .booking-block:active{cursor:grabbing}
 .booking-block.selected{outline:3px solid var(--navy);outline-offset:1px;z-index:8;overflow:visible}
-.booking-content{position:relative;z-index:3;pointer-events:none;display:flex;align-items:center;justify-content:center;width:100%;height:100%;max-height:100%;min-height:0;overflow:hidden;white-space:normal;overflow-wrap:normal;word-break:normal;hyphens:none;text-wrap:balance}.booking-block.selected .booking-content{padding-right:26px}
-.booking-block.label-truncated .booking-content{letter-spacing:-.08px}
-.booking-grid-line{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed rgba(20,49,72,.09);pointer-events:none;z-index:2}
-.booking-grid-line.major{border-left-style:solid;border-left-color:rgba(20,49,72,.16)}
+.booking-content{position:relative;z-index:3;pointer-events:none;overflow:hidden;width:100%}.booking-block.selected .booking-content{padding-right:26px}
+.booking-grid-line{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed rgba(20,49,72,.18);pointer-events:none;z-index:2}
+.booking-grid-line.major{border-left-style:solid;border-left-color:rgba(20,49,72,.3)}
 .drag-handle{position:absolute;z-index:10;background:var(--navy);border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.35)}
 .drag-handle.left,.drag-handle.right{top:50%;width:11px;height:28px;transform:translateY(-50%);cursor:ew-resize;border-radius:5px}
 .drag-handle.left{left:-6px}.drag-handle.right{right:-6px}
@@ -151,7 +150,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .fslt-logo img{display:block;max-width:190px;width:190px;height:auto;object-fit:contain}
 @media print{
   .booking-block.selected{outline:none!important;outline-offset:0!important}.booking-block.selected .booking-content{padding-right:0!important}.drag-handle,.nudge-arrow,.booking-delete-btn{display:none!important}
-.fslt-logo img{max-width:40mm;width:40mm}}
+.fslt-logo img{max-width:44mm;width:44mm}}
 .footer-field textarea{width:100%;min-height:72px;padding:8px;border:1px solid #aebbc5;border-radius:4px;background:white;font:inherit;resize:vertical}
 @media(max-width:600px){.print-footer{grid-template-columns:1fr}.address-block{border-left:0;border-top:1px solid #ccd5dc;padding:8px 0 0}.fslt-logo{justify-content:flex-start}}
 @media(max-width:600px){.main{padding:10px;gap:10px}.toolbar{padding:10px}.app-header{padding:14px}.panel-body,.collapsible-body{padding:11px}.lane-picker{grid-template-columns:repeat(2,1fr)}.hours-row{grid-template-columns:70px 1fr 1fr;gap:6px;padding:6px}.nudge-arrow.prev{left:-29px}.nudge-arrow.next{right:-29px}}
@@ -160,37 +159,23 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .status{font-size:12px;color:#536571;margin-left:auto;align-self:center}
 @media(max-width:950px){.main{grid-template-columns:1fr}.toolbar{position:static}.sheet{min-width:980px}}
 @media print{
-  @page{size:A4 landscape;margin:6mm 11mm}
-  html,body{background:white}
+  @page{size:A4 landscape;margin:8mm}
+  body{background:white}
   .app-header,.toolbar,.editor-panel{display:none!important}
   .main{display:block;padding:0}
   .panel{border:0;box-shadow:none}
   .panel-title{display:none}
   .preview-wrap{padding:0;overflow:visible;background:white}
   .sheet{box-shadow:none;min-width:0;width:100%;padding:0}
-  .sheet-heading{margin-bottom:6px;padding:0 1mm 5px}
-  .sheet-heading h2{font-size:19px}
-  .sheet-heading .subtitle{max-width:48%;padding-left:5mm}
-  .legend{gap:6px;margin:5px 0 7px}
-  .legend-item{font-size:10px}
-  .legend-swatch{width:15px;height:10px}
-  .timetable{width:100%;--day-column-width:82px}
-  .corner{display:flex;align-items:center;justify-content:center;text-align:center;padding:5px 3px}
-  .time-track{height:30px}
-  .time-label{height:16px;font-size:8.5px;padding-top:3px}
-  .time-track .slot-line{top:16px}
-  .day-row{min-height:55px}
-  .day-track{min-height:55px}
-  .day-label{align-items:center;justify-content:center;text-align:center;padding:4px 3px;font-size:11px;line-height:1.08;overflow:visible}
-  .day-label small{width:100%;margin-top:3px;font-size:7px;line-height:1.15;text-align:center}
+  .sheet-heading h2{font-size:20px}
+  .timetable{width:100%}
+  .timetable{--day-column-width:72px}
+  .day-row{min-height:60px}
+  .day-track{min-height:60px}
   .booking-block{font-size:8px}
-  .booking-content{padding-left:1px;padding-right:1px}
-  .booking-grid-line{border-left-color:rgba(20,49,72,.06)}
-  .booking-grid-line.major{border-left-color:rgba(20,49,72,.11)}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .slot-line{border-left-width:.18mm;border-left-color:rgba(96,116,132,.12)}
-  .slot-line.major{border-left-color:rgba(61,84,102,.22)}
-  .print-footer{break-inside:avoid;margin-top:2mm;padding-top:1.5mm;grid-template-columns:1.55fr .9fr auto;gap:4mm}
+  .slot-line{border-left-width:.2mm}
+  .print-footer{break-inside:avoid;margin-top:3mm;padding-top:2mm;grid-template-columns:1.55fr .9fr auto;gap:4mm}
   .policy-block,.address-block{font-size:7.5pt}.policy-block strong,.address-block strong{font-size:8pt}
 }
 
@@ -562,6 +547,64 @@ html[data-theme="dark"] .import-notice{background:#362f1b;color:#eadba6;border-c
   html[data-theme="dark"] .sheet{background:#fff!important;color:#17212b!important;box-shadow:none!important}
 }
 
+
+/* Final print sheet: full-width, square-edged and safely inset from the paper edge. */
+.policy-copy{display:block}
+.policy-introduction,.policy-ratios{display:block}
+.policy-ratios{margin-top:4px}
+.policy-ratios b{color:var(--navy)}
+
+@media print{
+  @page{size:A4 landscape;margin:6mm 7mm}
+  html,body{width:auto!important;min-width:0!important;margin:0!important;padding:0!important;background:#fff!important}
+  .main,.preview-panel,.preview-wrap,.sheet{
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    overflow:visible!important;
+    background:#fff!important;
+  }
+  .panel,.preview-panel{border-radius:0!important;overflow:visible!important}
+  .timetable,.sheet-heading,.legend,.print-footer{width:100%!important;max-width:none!important;border-radius:0!important}
+  .print-footer{
+    box-sizing:border-box;
+    margin-top:3mm!important;
+    padding-top:2.5mm!important;
+    grid-template-columns:minmax(0,1.35fr) minmax(40mm,.72fr) 43mm!important;
+    column-gap:5mm!important;
+    align-items:start!important;
+  }
+  .policy-block{
+    min-width:0!important;
+    padding-right:1mm!important;
+    font-size:7.25pt!important;
+    line-height:1.42!important;
+  }
+  .policy-block strong{
+    margin-bottom:1mm!important;
+    font-size:8pt!important;
+    letter-spacing:.01em;
+  }
+  .policy-copy{max-width:118mm}
+  .policy-introduction,.policy-ratios{display:block!important}
+  .policy-ratios{margin-top:1.2mm!important}
+  .address-block{
+    min-width:0!important;
+    padding-left:4mm!important;
+    font-size:7.25pt!important;
+    line-height:1.42!important;
+    align-self:start!important;
+  }
+  .address-block strong{font-size:8pt!important;margin-bottom:1mm!important}
+  .fslt-logo{min-width:0!important;width:43mm!important;justify-content:flex-end!important;align-self:start!important}
+  .fslt-logo img{display:block!important;width:42mm!important;max-width:42mm!important;height:auto!important}
+}
+
 </style>
 </head>
 <body class="startup-mode">
@@ -799,6 +842,23 @@ function timeStr(total){total=Math.max(0,Math.min(1439,Math.round(total)));retur
 function fmt(t){const [h,m]=t.split(':').map(Number);const ap=h>=12?'pm':'am';const hh=((h+11)%12)+1;return m?`${hh}:${String(m).padStart(2,'0')}${ap}`:`${hh}${ap}`}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function formatPolicyForFooter(value){
+ const text=String(value||'').trim();
+ if(!text)return '';
+ const marker='Parent/child ratios:';
+ const markerIndex=text.toLowerCase().indexOf(marker.toLowerCase());
+ if(markerIndex>=0){
+  const introduction=text.slice(0,markerIndex).trim();
+  const ratios=text.slice(markerIndex+marker.length).trim();
+  return `${introduction?`<span class="policy-introduction">${escapeHtml(introduction)}</span>`:''}<span class="policy-ratios"><b>${escapeHtml(marker)}</b> ${escapeHtml(ratios)}</span>`;
+ }
+ const sentenceBreak=text.indexOf('. ');
+ if(sentenceBreak>=0){
+  return `<span class="policy-introduction">${escapeHtml(text.slice(0,sentenceBreak+1))}</span><span class="policy-ratios">${escapeHtml(text.slice(sentenceBreak+2))}</span>`;
+ }
+ return `<span class="policy-introduction">${escapeHtml(text)}</span>`;
+}
+
 function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
 function laneRange(lanes){const clean=[...new Set((lanes||[]).map(Number).filter(n=>n>=1&&n<=state.laneCount))].sort((a,b)=>a-b);if(!clean.length)return [];return Array.from({length:clean[clean.length-1]-clean[0]+1},(_,i)=>clean[0]+i)}
 function coverageMode(b){return ['all','half-first','half-second','lanes'].includes(b?.coverageMode)?b.coverageMode:'lanes'}
@@ -868,8 +928,6 @@ function bind(){
  $('deleteConfirmOverlay').addEventListener('click',e=>{if(e.target===$('deleteConfirmOverlay'))closeDeleteConfirm()});
 
  window.addEventListener('beforeprint',prepareForPrint);
- window.addEventListener('afterprint',finishPrint);
- window.addEventListener('resize',scheduleBookingLabelFit);
  document.addEventListener('pointermove',onPointerMove,{passive:false});
  document.addEventListener('pointerup',endPointerDrag);
  document.addEventListener('pointercancel',endPointerDrag);
@@ -996,17 +1054,8 @@ function confirmDeleteBooking(){
 function removeBooking(id){requestDeleteBooking(id)}
 function selectBooking(id){selectedId=id;renderAll()}
 function deselectBooking(){if(selectedId===null)return;selectedId=null;renderAll()}
-function prepareForPrint(){
- document.body.classList.add('printing-mode');
- if(selectedId!==null){selectedId=null;renderAll()}
- cancelAnimationFrame(bookingLabelFitFrame);bookingLabelFitFrame=0;
- fitBookingLabels(true);
-}
-function finishPrint(){
- document.body.classList.remove('printing-mode');
- renderAll();
-}
-function printTimetable(){prepareForPrint();requestAnimationFrame(()=>requestAnimationFrame(()=>{fitBookingLabels(true);window.print()}))}
+function prepareForPrint(){if(selectedId!==null){selectedId=null;renderAll()}}
+function printTimetable(){prepareForPrint();requestAnimationFrame(()=>requestAnimationFrame(()=>window.print()))}
 function updateBooking(id,patch,save=true){state.bookings=state.bookings.map(b=>b.id===id?{...b,...patch}:b);if(save)saveAndRender();else renderAll()}
 function nudgeTime(delta){const b=selected();if(!b)return;const d=state.days[b.day],duration=mins(b.end)-mins(b.start);let start=mins(b.start)+delta;start=clamp(start,mins(d.open),mins(d.close)-duration);updateBooking(b.id,{start:timeStr(start),end:timeStr(start+duration)})}
 function moveLane(delta){const b=selected();if(!b||coverageMode(b)!=='lanes')return;const span=b.lanes.length;let first=clamp(b.lanes[0]+delta,1,state.laneCount-span+1);updateBooking(b.id,{lanes:Array.from({length:span},(_,i)=>first+i)})}
@@ -1100,109 +1149,19 @@ function renderSheet(){
     const boundaryLeft=(t-visibleStart)/(visibleEnd-visibleStart)*100;
     bookingLines+=`<span class="booking-grid-line${t%60===0?' major':''}" style="left:${boundaryLeft}%" aria-hidden="true"></span>`;
    }
-   html+=`<div class="booking-block${isSel?' selected':''}" data-booking-id="${b.id}" title="${escapeHtml(b.activity)} | ${b.start}-${b.end} | ${coverageMode(b)==='lanes'?`Lanes ${first}-${last}`:coverageMode(b)==='all'?'Whole pool':coverageMode(b)==='half-first'?'Lane 1 side half':'Opposite side half'}" style="left:${left}%;width:${width}%;top:${top}%;height:${height}%;background-color:${blockColour};color:${textColour(blockColour)}">${bookingLines}<span class="booking-content" data-full-label="${escapeHtml(b.activity)}">${escapeHtml(b.activity)}</span>${isSel?'<span class="drag-handle left" data-mode="resize-start"></span><span class="drag-handle right" data-mode="resize-end"></span>'+ (coverageMode(b)==='lanes'?'<span class="drag-handle top" data-mode="resize-top"></span><span class="drag-handle bottom" data-mode="resize-bottom"></span>':'') +'<button type="button" class="nudge-arrow prev" data-nudge="-15" aria-label="Move 15 minutes earlier">‹</button><button type="button" class="nudge-arrow next" data-nudge="15" aria-label="Move 15 minutes later">›</button><button type="button" class="booking-delete-btn" data-delete-booking="'+b.id+'" aria-label="Delete '+escapeHtml(b.activity)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z"/></svg></button>':''}</div>`;
+   html+=`<div class="booking-block${isSel?' selected':''}" data-booking-id="${b.id}" title="${escapeHtml(b.activity)} | ${b.start}-${b.end} | ${coverageMode(b)==='lanes'?`Lanes ${first}-${last}`:coverageMode(b)==='all'?'Whole pool':coverageMode(b)==='half-first'?'Lane 1 side half':'Opposite side half'}" style="left:${left}%;width:${width}%;top:${top}%;height:${height}%;background-color:${blockColour};color:${textColour(blockColour)}">${bookingLines}<span class="booking-content">${escapeHtml(b.activity)}</span>${isSel?'<span class="drag-handle left" data-mode="resize-start"></span><span class="drag-handle right" data-mode="resize-end"></span>'+ (coverageMode(b)==='lanes'?'<span class="drag-handle top" data-mode="resize-top"></span><span class="drag-handle bottom" data-mode="resize-bottom"></span>':'') +'<button type="button" class="nudge-arrow prev" data-nudge="-15" aria-label="Move 15 minutes earlier">‹</button><button type="button" class="nudge-arrow next" data-nudge="15" aria-label="Move 15 minutes later">›</button><button type="button" class="booking-delete-btn" data-delete-booking="'+b.id+'" aria-label="Delete '+escapeHtml(b.activity)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z"/></svg></button>':''}</div>`;
   });
   const laneLeft=pct(clamp(open,viewStart,viewEnd)-viewStart),laneRight=pct(viewEnd-clamp(close,viewStart,viewEnd));
-  for(let lane=1;lane<state.laneCount;lane++)html+=`<div style="position:absolute;left:${laneLeft}%;right:${laneRight}%;top:${lane/state.laneCount*100}%;border-top:1px dashed rgba(66,82,94,.17);pointer-events:none;z-index:1"></div>`;
+  for(let lane=1;lane<state.laneCount;lane++)html+=`<div style="position:absolute;left:${laneLeft}%;right:${laneRight}%;top:${lane/state.laneCount*100}%;border-top:1px dashed rgba(66,82,94,.28);pointer-events:none;z-index:1"></div>`;
   html+=`</div></div>`;
  });
  html+=`<div class="time-header bottom-time-header"><div class="corner">TIME</div><div class="time-track">${slotLines(true)}<div class="time-label start">${fmt(state.viewStart)}</div>`;
  for(let t=firstHour;t<viewEnd;t+=60)html+=`<div class="time-label" style="left:${pct(t-viewStart)}%">${fmt(timeStr(t))}</div>`;
- html+=`<div class="time-label end">${fmt(state.viewEnd)}</div></div></div></div><footer class="print-footer"><div class="policy-block"><strong>Admission policy</strong>${escapeHtml(state.admissionsPolicy||'')}</div><div class="address-block"><strong>${escapeHtml(state.venueName||'Venue')}</strong>${escapeHtml(state.venueAddress||'')}</div><div class="fslt-logo" aria-label="Fife Sports and Leisure Trust"><img src="fslt-logo.png" alt="Fife Sports and Leisure Trust logo"></div></footer>`;$('sheet').innerHTML=html;
+ html+=`<div class="time-label end">${fmt(state.viewEnd)}</div></div></div></div><footer class="print-footer"><div class="policy-block"><strong>Admission policy</strong><div class="policy-copy">${formatPolicyForFooter(state.admissionsPolicy||'')}</div></div><div class="address-block"><strong>${escapeHtml(state.venueName||'Venue')}</strong>${escapeHtml(state.venueAddress||'')}</div><div class="fslt-logo" aria-label="Fife Sports and Leisure Trust"><img src="fslt-logo.png" alt="Fife Sports and Leisure Trust logo"></div></footer>`;$('sheet').innerHTML=html;
  $('sheet').querySelectorAll('.booking-block[data-booking-id]').forEach(block=>{block.addEventListener('click',e=>{if(e.target.closest('[data-nudge], [data-delete-booking]'))return;selectBooking(block.dataset.bookingId)});block.addEventListener('pointerdown',startPointerDrag)});
  $('sheet').querySelectorAll('[data-nudge]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();nudgeTime(Number(btn.dataset.nudge))}));
  $('sheet').querySelectorAll('[data-delete-booking]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();requestDeleteBooking(btn.dataset.deleteBooking)}));
  $('sheet').onclick=e=>{if(!e.target.closest('.booking-block'))deselectBooking()};
- scheduleBookingLabelFit();
-}
-let bookingLabelFitFrame=0;
-function scheduleBookingLabelFit(){
- cancelAnimationFrame(bookingLabelFitFrame);
- bookingLabelFitFrame=requestAnimationFrame(()=>{bookingLabelFitFrame=0;fitBookingLabels()});
-}
-function compactBookingLabel(text,length){
- const clean=String(text||'').trim();
- if(length>=clean.length)return clean;
- let shortened=clean.slice(0,Math.max(1,length)).trimEnd();
- const lastSpace=shortened.lastIndexOf(' ');
- if(lastSpace>=4&&lastSpace>=shortened.length*.55)shortened=shortened.slice(0,lastSpace);
- return (shortened||clean.slice(0,1))+'…';
-}
-function conciseBookingMarker(text,maxCharacters=2){
- const clean=String(text||'').trim();
- if(!clean)return '•';
- const words=clean.split(/\s+/).filter(Boolean);
- if(words.length>1){
-  const initials=words.map(word=>word[0]).join('').toUpperCase();
-  return initials.slice(0,maxCharacters)||clean[0].toUpperCase();
- }
- return clean.slice(0,maxCharacters).toUpperCase();
-}
-function fitBookingLabels(forcePrint=false){
- const printMode=forcePrint||window.matchMedia('print').matches||document.body.classList.contains('printing-mode');
- document.querySelectorAll('.booking-block[data-booking-id] .booking-content').forEach(content=>{
-  const block=content.closest('.booking-block');
-  const fullLabel=content.dataset.fullLabel||content.textContent.trim();
-  content.dataset.fullLabel=fullLabel;
-  content.textContent=fullLabel;
-  content.style.fontSize='';
-  content.style.lineHeight='';
-  content.style.letterSpacing='';
-  block.classList.remove('label-truncated','label-hidden-print');
-  if(block.clientWidth<3||block.clientHeight<3)return;
-  const fits=()=>content.scrollWidth<=content.clientWidth+1&&content.scrollHeight<=content.clientHeight+1;
-  const initialSize=parseFloat(getComputedStyle(block).fontSize)||10;
-  if(printMode){
-   if(block.clientWidth<24||(block.clientWidth<52&&fullLabel.length>10)){
-    content.textContent='';
-    block.classList.add('label-hidden-print');
-    return;
-   }
-   let size=initialSize;
-   const minimumSize=5;
-   while(size>minimumSize&&!fits()){
-    size=Math.max(minimumSize,size-.5);
-    content.style.fontSize=size+'px';
-    content.style.lineHeight='1.02';
-   }
-   if(!fits()){
-    content.textContent='';
-    block.classList.add('label-hidden-print');
-   }
-   return;
-  }
-  if(block.clientWidth<24){
-   content.textContent=conciseBookingMarker(fullLabel,1);
-   content.style.fontSize='8px';
-   content.style.lineHeight='1';
-   block.classList.add('label-truncated');
-   return;
-  }
-  if(block.clientWidth<35){
-   content.textContent=conciseBookingMarker(fullLabel,2);
-   content.style.fontSize='7.5px';
-   content.style.lineHeight='1';
-   block.classList.add('label-truncated');
-   return;
-  }
-  const minimumSize=6;
-  let size=initialSize;
-  while(size>minimumSize&&!fits()){
-   size=Math.max(minimumSize,size-.5);
-   content.style.fontSize=size+'px';
-   content.style.lineHeight='1.02';
-  }
-  if(fits())return;
-  let low=1,high=fullLabel.length,best='…';
-  while(low<=high){
-   const middle=Math.floor((low+high)/2);
-   const candidate=compactBookingLabel(fullLabel,middle);
-   content.textContent=candidate;
-   if(fits()){best=candidate;low=middle+1}else high=middle-1;
-  }
-  content.textContent=best;
-  block.classList.add('label-truncated');
- });
 }
 function startPointerDrag(e){
  const block=e.currentTarget,id=block.dataset.bookingId,b=state.bookings.find(x=>x.id===id);if(!b)return;
