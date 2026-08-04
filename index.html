@@ -179,7 +179,6 @@ button:disabled{opacity:.55;cursor:not-allowed}
   <h1>Pool Timetable Creator</h1>
   <p>Create, edit, save and print a lane-based weekly pool timetable.</p>
 </header>
-<div id="mobileNotice" style="display:none;background:#fff3cd;color:#5d4a00;padding:10px 18px;border-bottom:1px solid #e3cf83;font-size:13px"><strong>Using an iPhone?</strong> The Files or ChatGPT preview may not run the editor. Download the ZIP, extract it, then open <code>index.html</code> in a browser or upload it to a web host.</div>
 <div class="toolbar">
   <button id="newBtn" class="secondary">New timetable</button>
   <button id="downloadBtn">Save timetable</button>
@@ -740,7 +739,6 @@ async function downloadJson(){
  $('status').textContent=`Timetable downloaded as ${filename}`;
 }
 function uploadJson(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{const data=JSON.parse(r.result);if(!Array.isArray(data.bookings))throw new Error();normalizeState(data);selectedId=null;syncInputs();resetForm();saveAndRender();$('status').textContent=`Timetable uploaded: ${file.name}`}catch(err){alert('That file is not a valid timetable file.')}};r.readAsText(file);e.target.value=''}
-if(/iPhone|iPad|iPod/i.test(navigator.userAgent)) $('mobileNotice').style.display='block';
 init();
 </script>
 </body>
