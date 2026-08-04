@@ -104,7 +104,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .booking-block{position:absolute;border:1px solid rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:10px;line-height:1.1;padding:2px;min-width:2px;cursor:grab;user-select:none;touch-action:none;z-index:2}
 .booking-block:active{cursor:grabbing}
 .booking-block.selected{outline:3px solid var(--navy);outline-offset:1px;z-index:8;overflow:visible}
-.booking-content{position:relative;z-index:3;pointer-events:none;overflow:hidden;width:100%}
+.booking-content{position:relative;z-index:3;pointer-events:none;overflow:hidden;width:100%}.booking-block.selected .booking-content{padding-right:26px}
 .booking-grid-line{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed rgba(20,49,72,.18);pointer-events:none;z-index:2}
 .booking-grid-line.major{border-left-style:solid;border-left-color:rgba(20,49,72,.3)}
 .drag-handle{position:absolute;z-index:10;background:var(--navy);border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.35)}
@@ -114,9 +114,9 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .drag-handle.top{top:-5px}.drag-handle.bottom{bottom:-5px}
 .nudge-arrow{position:absolute;top:50%;transform:translateY(-50%);width:25px;height:25px;padding:0;border-radius:50%;background:white;color:var(--navy);border:2px solid var(--navy);display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;z-index:12}
 .nudge-arrow.prev{left:-34px}.nudge-arrow.next{right:-34px}
-.booking-delete-btn{position:absolute;top:-15px;right:-15px;width:30px;height:30px;padding:0;border-radius:50%;background:#fff;color:#a11f2b;border:2px solid #a11f2b;display:flex;align-items:center;justify-content:center;z-index:14;box-shadow:0 2px 6px rgba(0,0,0,.28)}
+.booking-delete-btn{position:absolute;top:3px;right:3px;width:24px;height:24px;padding:0;border-radius:50%;background:#fff;color:#a11f2b;border:2px solid #a11f2b;display:flex;align-items:center;justify-content:center;z-index:14;box-shadow:0 2px 6px rgba(0,0,0,.28)}
 .booking-delete-btn:hover{background:#a11f2b;color:#fff}
-.booking-delete-btn svg{width:15px;height:15px;pointer-events:none}
+.booking-delete-btn svg{width:13px;height:13px;pointer-events:none}
 .confirm-overlay{position:fixed;inset:0;background:rgba(18,32,45,.58);display:none;align-items:center;justify-content:center;padding:18px;z-index:1000}
 .confirm-overlay.open{display:flex}
 .confirm-dialog{width:min(420px,100%);background:#fff;border-radius:10px;border:1px solid #c8d2d9;box-shadow:0 18px 50px rgba(0,0,0,.28);padding:20px}
@@ -142,7 +142,9 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .address-block strong{display:block;color:var(--navy);font-size:11px;margin-bottom:2px}
 .fslt-logo{display:flex;align-items:center;min-width:175px;justify-content:flex-end}
 .fslt-logo img{display:block;max-width:190px;width:190px;height:auto;object-fit:contain}
-@media print{.fslt-logo img{max-width:44mm;width:44mm}}
+@media print{
+  .booking-block.selected{outline:none!important;outline-offset:0!important}.booking-block.selected .booking-content{padding-right:0!important}.drag-handle,.nudge-arrow,.booking-delete-btn{display:none!important}
+.fslt-logo img{max-width:44mm;width:44mm}}
 .footer-field textarea{width:100%;min-height:72px;padding:8px;border:1px solid #aebbc5;border-radius:4px;background:white;font:inherit;resize:vertical}
 @media(max-width:600px){.print-footer{grid-template-columns:1fr}.address-block{border-left:0;border-top:1px solid #ccd5dc;padding:8px 0 0}.fslt-logo{justify-content:flex-start}}
 @media(max-width:600px){.main{padding:10px;gap:10px}.toolbar{padding:10px}.app-header{padding:14px}.panel-body,.collapsible-body{padding:11px}.lane-picker{grid-template-columns:repeat(2,1fr)}.hours-row{grid-template-columns:70px 1fr 1fr;gap:6px;padding:6px}.nudge-arrow.prev{left:-29px}.nudge-arrow.next{right:-29px}}
@@ -416,12 +418,13 @@ function bind(){
  $('cancelEditBtn').addEventListener('click',resetForm);
  $('downloadBtn').addEventListener('click',downloadJson);
  $('uploadInput').addEventListener('change',uploadJson);
- $('printBtn').addEventListener('click',()=>window.print());
+ $('printBtn').addEventListener('click',printTimetable);
  $('newBtn').addEventListener('click',()=>{if(confirm('Clear the current timetable and start again?')){state=freshState();selectedId=null;syncInputs();resetForm();saveAndRender()}});
  $('cancelDeleteBtn').addEventListener('click',closeDeleteConfirm);
  $('confirmDeleteBtn').addEventListener('click',confirmDeleteBooking);
  $('deleteConfirmOverlay').addEventListener('click',e=>{if(e.target===$('deleteConfirmOverlay'))closeDeleteConfirm()});
 
+ window.addEventListener('beforeprint',prepareForPrint);
  document.addEventListener('pointermove',onPointerMove,{passive:false});
  document.addEventListener('pointerup',endPointerDrag);
  document.addEventListener('pointercancel',endPointerDrag);
@@ -547,6 +550,9 @@ function confirmDeleteBooking(){
 }
 function removeBooking(id){requestDeleteBooking(id)}
 function selectBooking(id){selectedId=id;renderAll()}
+function deselectBooking(){if(selectedId===null)return;selectedId=null;renderAll()}
+function prepareForPrint(){if(selectedId!==null){selectedId=null;renderAll()}}
+function printTimetable(){prepareForPrint();requestAnimationFrame(()=>requestAnimationFrame(()=>window.print()))}
 function updateBooking(id,patch,save=true){state.bookings=state.bookings.map(b=>b.id===id?{...b,...patch}:b);if(save)saveAndRender();else renderAll()}
 function nudgeTime(delta){const b=selected();if(!b)return;const d=state.days[b.day],duration=mins(b.end)-mins(b.start);let start=mins(b.start)+delta;start=clamp(start,mins(d.open),mins(d.close)-duration);updateBooking(b.id,{start:timeStr(start),end:timeStr(start+duration)})}
 function moveLane(delta){const b=selected();if(!b||coverageMode(b)!=='lanes')return;const span=b.lanes.length;let first=clamp(b.lanes[0]+delta,1,state.laneCount-span+1);updateBooking(b.id,{lanes:Array.from({length:span},(_,i)=>first+i)})}
@@ -652,6 +658,7 @@ function renderSheet(){
  $('sheet').querySelectorAll('.booking-block[data-booking-id]').forEach(block=>{block.addEventListener('click',e=>{if(e.target.closest('[data-nudge], [data-delete-booking]'))return;selectBooking(block.dataset.bookingId)});block.addEventListener('pointerdown',startPointerDrag)});
  $('sheet').querySelectorAll('[data-nudge]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();nudgeTime(Number(btn.dataset.nudge))}));
  $('sheet').querySelectorAll('[data-delete-booking]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();requestDeleteBooking(btn.dataset.deleteBooking)}));
+ $('sheet').onclick=e=>{if(!e.target.closest('.booking-block'))deselectBooking()};
 }
 function startPointerDrag(e){
  const block=e.currentTarget,id=block.dataset.bookingId,b=state.bookings.find(x=>x.id===id);if(!b)return;
