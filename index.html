@@ -605,6 +605,61 @@ html[data-theme="dark"] .import-notice{background:#362f1b;color:#eadba6;border-c
   .fslt-logo img{display:block!important;width:42mm!important;max-width:42mm!important;height:auto!important}
 }
 
+
+/* Booking labels and day column: complete titles only, with safer spacing. */
+.timetable{--day-column-width:116px}
+.day-label{
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:8px 10px;
+  overflow:hidden;
+  min-width:0;
+  box-sizing:border-box;
+  white-space:nowrap;
+  line-height:1.08;
+}
+.day-label small{width:100%;text-align:center}
+.booking-content{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  max-width:100%;
+  max-height:100%;
+  overflow:hidden;
+  white-space:normal;
+  overflow-wrap:normal;
+  word-break:normal;
+  hyphens:none;
+  text-wrap:balance;
+}
+.booking-block.label-hidden .booking-content{visibility:hidden!important}
+@media print{
+  .timetable{--day-column-width:28mm!important}
+  .day-label{
+    padding:1.2mm 2.3mm!important;
+    font-size:8.8pt!important;
+    line-height:1.05!important;
+    align-items:center!important;
+    justify-content:center!important;
+    text-align:center!important;
+    overflow:hidden!important;
+  }
+  .day-label small{
+    width:100%!important;
+    margin-top:1mm!important;
+    font-size:6.35pt!important;
+    line-height:1.12!important;
+    text-align:center!important;
+  }
+  .corner{padding-left:2mm!important;padding-right:2mm!important;text-align:center!important}
+  .booking-content{overflow:hidden!important;text-overflow:clip!important}
+}
+
 </style>
 </head>
 <body class="startup-mode">
@@ -928,6 +983,8 @@ function bind(){
  $('deleteConfirmOverlay').addEventListener('click',e=>{if(e.target===$('deleteConfirmOverlay'))closeDeleteConfirm()});
 
  window.addEventListener('beforeprint',prepareForPrint);
+ window.addEventListener('afterprint',scheduleBookingLabelFit);
+ window.addEventListener('resize',scheduleBookingLabelFit);
  document.addEventListener('pointermove',onPointerMove,{passive:false});
  document.addEventListener('pointerup',endPointerDrag);
  document.addEventListener('pointercancel',endPointerDrag);
@@ -1054,7 +1111,12 @@ function confirmDeleteBooking(){
 function removeBooking(id){requestDeleteBooking(id)}
 function selectBooking(id){selectedId=id;renderAll()}
 function deselectBooking(){if(selectedId===null)return;selectedId=null;renderAll()}
-function prepareForPrint(){if(selectedId!==null){selectedId=null;renderAll()}}
+function prepareForPrint(){
+ const printing=window.matchMedia('print').matches;
+ if(printing){selectedId=null;applyPrintSafeBookingLabels();return}
+ if(selectedId!==null){selectedId=null;renderAll()}
+ fitBookingLabels();
+}
 function printTimetable(){prepareForPrint();requestAnimationFrame(()=>requestAnimationFrame(()=>window.print()))}
 function updateBooking(id,patch,save=true){state.bookings=state.bookings.map(b=>b.id===id?{...b,...patch}:b);if(save)saveAndRender();else renderAll()}
 function nudgeTime(delta){const b=selected();if(!b)return;const d=state.days[b.day],duration=mins(b.end)-mins(b.start);let start=mins(b.start)+delta;start=clamp(start,mins(d.open),mins(d.close)-duration);updateBooking(b.id,{start:timeStr(start),end:timeStr(start+duration)})}
@@ -1149,7 +1211,7 @@ function renderSheet(){
     const boundaryLeft=(t-visibleStart)/(visibleEnd-visibleStart)*100;
     bookingLines+=`<span class="booking-grid-line${t%60===0?' major':''}" style="left:${boundaryLeft}%" aria-hidden="true"></span>`;
    }
-   html+=`<div class="booking-block${isSel?' selected':''}" data-booking-id="${b.id}" title="${escapeHtml(b.activity)} | ${b.start}-${b.end} | ${coverageMode(b)==='lanes'?`Lanes ${first}-${last}`:coverageMode(b)==='all'?'Whole pool':coverageMode(b)==='half-first'?'Lane 1 side half':'Opposite side half'}" style="left:${left}%;width:${width}%;top:${top}%;height:${height}%;background-color:${blockColour};color:${textColour(blockColour)}">${bookingLines}<span class="booking-content">${escapeHtml(b.activity)}</span>${isSel?'<span class="drag-handle left" data-mode="resize-start"></span><span class="drag-handle right" data-mode="resize-end"></span>'+ (coverageMode(b)==='lanes'?'<span class="drag-handle top" data-mode="resize-top"></span><span class="drag-handle bottom" data-mode="resize-bottom"></span>':'') +'<button type="button" class="nudge-arrow prev" data-nudge="-15" aria-label="Move 15 minutes earlier">‹</button><button type="button" class="nudge-arrow next" data-nudge="15" aria-label="Move 15 minutes later">›</button><button type="button" class="booking-delete-btn" data-delete-booking="'+b.id+'" aria-label="Delete '+escapeHtml(b.activity)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z"/></svg></button>':''}</div>`;
+   html+=`<div class="booking-block${isSel?' selected':''}" data-booking-id="${b.id}" title="${escapeHtml(b.activity)} | ${b.start}-${b.end} | ${coverageMode(b)==='lanes'?`Lanes ${first}-${last}`:coverageMode(b)==='all'?'Whole pool':coverageMode(b)==='half-first'?'Lane 1 side half':'Opposite side half'}" style="left:${left}%;width:${width}%;top:${top}%;height:${height}%;background-color:${blockColour};color:${textColour(blockColour)}">${bookingLines}<span class="booking-content" data-full-label="${escapeHtml(b.activity)}">${escapeHtml(b.activity)}</span>${isSel?'<span class="drag-handle left" data-mode="resize-start"></span><span class="drag-handle right" data-mode="resize-end"></span>'+ (coverageMode(b)==='lanes'?'<span class="drag-handle top" data-mode="resize-top"></span><span class="drag-handle bottom" data-mode="resize-bottom"></span>':'') +'<button type="button" class="nudge-arrow prev" data-nudge="-15" aria-label="Move 15 minutes earlier">‹</button><button type="button" class="nudge-arrow next" data-nudge="15" aria-label="Move 15 minutes later">›</button><button type="button" class="booking-delete-btn" data-delete-booking="'+b.id+'" aria-label="Delete '+escapeHtml(b.activity)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z"/></svg></button>':''}</div>`;
   });
   const laneLeft=pct(clamp(open,viewStart,viewEnd)-viewStart),laneRight=pct(viewEnd-clamp(close,viewStart,viewEnd));
   for(let lane=1;lane<state.laneCount;lane++)html+=`<div style="position:absolute;left:${laneLeft}%;right:${laneRight}%;top:${lane/state.laneCount*100}%;border-top:1px dashed rgba(66,82,94,.28);pointer-events:none;z-index:1"></div>`;
@@ -1162,6 +1224,53 @@ function renderSheet(){
  $('sheet').querySelectorAll('[data-nudge]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();nudgeTime(Number(btn.dataset.nudge))}));
  $('sheet').querySelectorAll('[data-delete-booking]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();requestDeleteBooking(btn.dataset.deleteBooking)}));
  $('sheet').onclick=e=>{if(!e.target.closest('.booking-block'))deselectBooking()};
+ scheduleBookingLabelFit();
+}
+
+let bookingLabelFitFrame=0;
+function scheduleBookingLabelFit(){
+ cancelAnimationFrame(bookingLabelFitFrame);
+ bookingLabelFitFrame=requestAnimationFrame(()=>{bookingLabelFitFrame=0;fitBookingLabels()});
+}
+function fitBookingLabels(){
+ document.querySelectorAll('.booking-block[data-booking-id] .booking-content').forEach(content=>{
+  const block=content.closest('.booking-block');
+  const fullLabel=content.dataset.fullLabel||'';
+  content.textContent=fullLabel;
+  content.style.fontSize='';
+  content.style.lineHeight='';
+  content.style.letterSpacing='';
+  block.classList.remove('label-hidden');
+  if(!fullLabel||block.clientWidth<3||block.clientHeight<3)return;
+  const naturalSize=parseFloat(getComputedStyle(block).fontSize)||10;
+  const minimumSize=window.matchMedia('print').matches?5.5:6.5;
+  const fits=()=>content.scrollWidth<=content.clientWidth+0.5&&content.scrollHeight<=content.clientHeight+0.5;
+  let size=naturalSize;
+  while(size>minimumSize&&!fits()){
+   size=Math.max(minimumSize,size-.5);
+   content.style.fontSize=size+'px';
+   content.style.lineHeight='1.02';
+  }
+  if(!fits()){
+   content.textContent='';
+   block.classList.add('label-hidden');
+   content.dataset.printSafe='0';
+  }else{
+   content.dataset.printSafe='1';
+  }
+ });
+}
+function applyPrintSafeBookingLabels(){
+ document.querySelectorAll('.booking-block[data-booking-id] .booking-content').forEach(content=>{
+  const block=content.closest('.booking-block');
+  if(content.dataset.printSafe==='1'){
+   content.textContent=content.dataset.fullLabel||'';
+   block.classList.remove('label-hidden');
+  }else{
+   content.textContent='';
+   block.classList.add('label-hidden');
+  }
+ });
 }
 function startPointerDrag(e){
  const block=e.currentTarget,id=block.dataset.bookingId,b=state.bookings.find(x=>x.id===id);if(!b)return;
