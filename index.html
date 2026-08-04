@@ -1,9 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-app-version="2.0">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pool Timetable Creator V16</title>
+<title>Timetable Creator</title>
+<script>
+try {
+  const savedTheme = localStorage.getItem('timetableCreatorTheme');
+  if (savedTheme === 'dark') document.documentElement.dataset.theme = 'dark';
+} catch (_) {}
+</script>
 <style>
 :root {
   --navy:#163a5f;
@@ -172,26 +178,419 @@ button:disabled{opacity:.55;cursor:not-allowed}
   .print-footer{break-inside:avoid;margin-top:3mm;padding-top:2mm;grid-template-columns:1.55fr .9fr auto;gap:4mm}
   .policy-block,.address-block{font-size:7.5pt}.policy-block strong,.address-block strong{font-size:8pt}
 }
+
+/* Timetable Creator application shell */
+:root{
+  --navy:#123a5a;
+  --blue:#236a9b;
+  --blue-strong:#15547f;
+  --yellow:#e4c545;
+  --surface:#ffffff;
+  --surface-soft:#f5f8fa;
+  --app-bg:#e7edf1;
+  --shadow-lg:0 24px 70px rgba(15,40,61,.22);
+}
+body{background:var(--app-bg)}
+body.startup-mode{overflow:hidden}
+body.startup-mode>.app-header,
+body.startup-mode>.toolbar,
+body.startup-mode>.main{display:none!important}
+.start-screen{position:fixed;inset:0;z-index:1800;display:none;align-items:center;justify-content:center;padding:28px;background:
+  radial-gradient(circle at 12% 10%,rgba(228,197,69,.24),transparent 26%),
+  radial-gradient(circle at 88% 85%,rgba(65,135,181,.24),transparent 34%),
+  linear-gradient(145deg,#0e2f4b 0%,#174e74 52%,#0c293f 100%)}
+body.startup-mode .start-screen{display:flex}
+.start-card{width:min(880px,100%);background:rgba(255,255,255,.97);border:1px solid rgba(255,255,255,.54);border-radius:24px;box-shadow:var(--shadow-lg);overflow:hidden}
+.start-card-top{padding:42px 46px 30px;border-bottom:1px solid #dce5eb;background:linear-gradient(135deg,#fff 0%,#f3f8fb 100%)}
+.brand-lockup{display:flex;gap:15px;align-items:center;margin-bottom:30px}
+.brand-mark{width:48px;height:48px;border-radius:14px;background:var(--navy);position:relative;box-shadow:inset 0 -5px 0 var(--yellow)}
+.brand-mark::before,.brand-mark::after{content:'';position:absolute;left:11px;right:11px;height:5px;border-radius:5px;background:white}
+.brand-mark::before{top:13px}.brand-mark::after{top:24px}
+.brand-copy strong{display:block;color:var(--navy);font-size:19px;letter-spacing:.2px}.brand-copy span{font-size:12px;color:#667783;text-transform:uppercase;letter-spacing:1.2px;font-weight:800}
+.start-card h1{margin:0;color:var(--navy);font-size:clamp(32px,5vw,52px);line-height:1.03;letter-spacing:-1.2px}.start-card h1 em{font-style:normal;color:var(--blue)}
+.start-card-top>p{margin:16px 0 0;max-width:640px;color:#5a6b77;font-size:17px;line-height:1.55}
+.start-actions{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:28px 46px 42px}
+.start-action{min-height:156px;border:1px solid #cbd8e1;border-radius:16px;background:white;color:var(--ink);padding:24px;text-align:left;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;box-shadow:0 8px 24px rgba(30,64,88,.07);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.start-action:hover{transform:translateY(-3px);box-shadow:0 16px 34px rgba(30,64,88,.13);border-color:#8db3cc}.start-action.primary{background:var(--navy);color:white;border-color:var(--navy)}
+.start-action-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#e8f1f7;color:var(--blue);font-size:25px;font-weight:400}.start-action.primary .start-action-icon{background:rgba(255,255,255,.14);color:var(--yellow)}
+.start-action strong{font-size:19px;display:block;margin-top:20px}.start-action small{display:block;margin-top:6px;line-height:1.4;color:#657783}.start-action.primary small{color:#d8e6ef}
+.start-file{padding:0;cursor:pointer}.start-file input{display:none}.start-file-inner{padding:24px;width:100%;height:100%;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between}
+.version-note{padding:0 46px 24px;color:#83919b;font-size:11px;text-align:right}
+.app-header{padding:15px 22px;display:flex;align-items:center;gap:14px;border-bottom:4px solid var(--yellow);box-shadow:0 4px 18px rgba(12,35,52,.15)}
+.app-header .brand-mark{width:38px;height:38px;border-radius:10px;flex:none}.app-header .brand-mark::before,.app-header .brand-mark::after{left:9px;right:9px;height:4px}.app-header .brand-mark::before{top:10px}.app-header .brand-mark::after{top:19px}
+.app-heading{min-width:0}.app-heading h1{font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.app-heading p{margin-top:2px;font-size:12px}
+.header-project{margin-left:auto;text-align:right;min-width:0}.header-project strong{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:330px}.header-project span{font-size:11px;color:#cddde8}
+.toolbar{top:0;padding:10px 18px;box-shadow:0 3px 12px rgba(25,45,65,.07)}
+.toolbar button,.toolbar .file-label{border-radius:8px;padding:9px 12px}.toolbar .home-button{background:#253f53}.toolbar .save-button{background:var(--blue-strong)}
+.project-chip{display:flex;align-items:center;gap:7px;background:#edf4f8;border:1px solid #cbd9e2;color:#315166;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:800}.project-chip::before{content:'';width:8px;height:8px;border-radius:50%;background:#3a9a65}
+.main{grid-template-columns:370px minmax(0,1fr);max-width:1700px;margin:0 auto;width:100%}
+.panel,.collapsible,.selection-panel{border-radius:11px;border-color:#c8d4dc;box-shadow:0 6px 18px rgba(25,45,65,.07)}
+.panel-title,.collapsible summary{background:linear-gradient(90deg,var(--navy),#1d567e);border-bottom-width:3px}
+.auto-range-card{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:14px 0;padding:11px 12px;border:1px solid #c8dae5;border-radius:8px;background:#eef6fa}.auto-range-card strong{display:block;color:var(--navy);font-size:12px}.auto-range-card span{font-size:12px;color:#567080}.auto-range-value{font-size:13px!important;font-weight:900!important;color:var(--blue)!important;white-space:nowrap}
+.settings-warning{display:none!important}
+.wizard-overlay{position:fixed;inset:0;z-index:1900;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(8,26,39,.72);backdrop-filter:blur(6px)}
+.wizard-overlay.open{display:flex}.wizard-card{width:min(920px,100%);max-height:calc(100vh - 48px);display:flex;flex-direction:column;background:white;border-radius:20px;box-shadow:var(--shadow-lg);overflow:hidden}
+.wizard-header{display:flex;align-items:center;gap:15px;padding:22px 26px;border-bottom:1px solid #d8e2e8;background:#f8fafb}.wizard-header .brand-mark{width:38px;height:38px;border-radius:10px}.wizard-heading{min-width:0}.wizard-heading h2{margin:0;color:var(--navy);font-size:20px}.wizard-heading p{margin:3px 0 0;color:#667783;font-size:12px}.wizard-progress{margin-left:auto;display:flex;gap:7px}.wizard-dot{width:28px;height:6px;border-radius:8px;background:#d8e1e7}.wizard-dot.active{background:var(--blue)}.wizard-dot.complete{background:var(--yellow)}
+.wizard-body{padding:26px;overflow:auto}.wizard-step{display:none}.wizard-step.active{display:block}.wizard-step h3{margin:0 0 6px;color:var(--navy);font-size:23px}.wizard-step>.step-copy{margin:0 0 22px;color:#667783;line-height:1.5}
+.wizard-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}.wizard-fields .field{margin:0}.wizard-fields .full{grid-column:1/-1}
+.centre-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.centre-option{border:1px solid #cbd7df;background:white;color:var(--ink);border-radius:11px;padding:14px;text-align:left;min-height:88px}.centre-option:hover{border-color:#77a8c7}.centre-option.selected{border-color:var(--blue);outline:2px solid rgba(35,106,155,.2);background:#eef6fb}.centre-option strong{display:block;font-size:13px;color:var(--navy)}.centre-option small{display:block;margin-top:5px;color:#697b87;font-weight:400;line-height:1.35}
+.wizard-hours{display:grid;grid-template-columns:1fr 1fr;gap:9px}.wizard-hours-row{display:grid;grid-template-columns:100px 1fr 1fr;gap:8px;align-items:end;padding:9px;border:1px solid #d5dfe5;border-radius:9px;background:#f7f9fa}.wizard-hours-row strong{align-self:center;font-size:12px;color:#30414f}.wizard-hours-row label{font-size:10px;font-weight:800;color:#677985}.wizard-hours-row input{width:100%;padding:7px;border:1px solid #b5c3cc;border-radius:5px;background:white}
+.wizard-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:17px 26px;border-top:1px solid #d8e2e8;background:#f8fafb}.wizard-footer-copy{font-size:11px;color:#71818c}.wizard-footer-actions{display:flex;gap:9px;margin-left:auto}.wizard-footer button{border-radius:8px;min-width:100px}
+.import-notice{display:none;margin:0 18px 14px;padding:10px 13px;border:1px solid #ead27a;border-left:5px solid var(--yellow);border-radius:7px;background:#fff8df;color:#65531d;font-size:12px;line-height:1.4}.import-notice.show{display:block}
+.fslt-wordmark{min-width:178px;text-align:right;font-weight:900;color:var(--navy);line-height:.92;text-transform:lowercase;font-size:15px;letter-spacing:-.5px}.fslt-wordmark span{display:block;color:#3b7197}.fslt-wordmark small{display:block;color:#6d7d88;font-size:7px;letter-spacing:.5px;text-transform:uppercase;margin-top:4px}
+@media(max-width:760px){.start-card-top{padding:30px 24px 22px}.start-actions{grid-template-columns:1fr;padding:20px 24px 30px}.version-note{padding:0 24px 18px}.centre-grid{grid-template-columns:1fr 1fr}.wizard-fields,.wizard-hours{grid-template-columns:1fr}.header-project{display:none}.project-chip{display:none}}
+@media(max-width:480px){.start-screen{padding:12px}.start-card{border-radius:17px}.centre-grid{grid-template-columns:1fr}.wizard-overlay{padding:8px}.wizard-card{max-height:calc(100vh - 16px);border-radius:13px}.wizard-body{padding:18px}.wizard-hours-row{grid-template-columns:82px 1fr 1fr}.wizard-footer-copy{display:none}}
+@media print{.start-screen,.wizard-overlay,.import-notice{display:none!important}.fslt-wordmark{min-width:40mm;font-size:11pt}.fslt-wordmark small{font-size:5pt}}
+
+
+/* Workspace simplification and drag-to-create bookings */
+body:not(.startup-mode) > .app-header{display:none!important}
+#homeBtn{display:none!important}
+#bookingPanel{display:none!important}
+body:not(.startup-mode) > .toolbar{top:0}
+#status{display:none!important}
+.day-track.booking-create-zone{cursor:crosshair}
+.booking-draft{
+  position:absolute;
+  z-index:25;
+  border:2px dashed var(--navy);
+  background:rgba(46,111,158,.25);
+  color:var(--navy);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-size:10px;
+  font-weight:900;
+  line-height:1.15;
+  padding:3px;
+  pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.7);
+}
+.drag-create-help{
+  margin:0 0 12px;
+  padding:10px 11px;
+  border:1px solid #c8dae5;
+  border-left:4px solid var(--yellow);
+  border-radius:6px;
+  background:#eef6fa;
+  color:#486272;
+  font-size:12px;
+  line-height:1.45;
+}
+.drag-create-help strong{color:var(--navy)}
+
+.booking-copy-preview{
+  position:absolute;
+  z-index:30;
+  border:2px dashed var(--navy);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-size:10px;
+  font-weight:900;
+  line-height:1.15;
+  padding:3px;
+  pointer-events:none;
+  opacity:.78;
+  box-shadow:0 3px 10px rgba(22,58,95,.22),inset 0 0 0 1px rgba(255,255,255,.72);
+}
+.booking-copy-preview.invalid{
+  background:rgba(166,59,59,.18)!important;
+  border-color:var(--danger);
+  color:var(--danger)!important;
+}
+body.copy-booking-mode .day-track{cursor:copy!important}
+body.copy-booking-mode::after{
+  content:'Click to place the copied booking · Esc to cancel';
+  position:fixed;
+  left:50%;
+  bottom:18px;
+  transform:translateX(-50%);
+  z-index:1200;
+  padding:10px 14px;
+  border-radius:999px;
+  background:#163a5f;
+  color:#fff;
+  box-shadow:0 7px 24px rgba(14,37,58,.28);
+  font-size:12px;
+  font-weight:800;
+  white-space:nowrap;
+  pointer-events:none;
+}
+@media(max-width:600px){body.copy-booking-mode::after{max-width:calc(100vw - 24px);white-space:normal;text-align:center}}
+@media print{.booking-copy-preview{display:none!important}body.copy-booking-mode::after{display:none!important}}
+
+.quick-type-bar{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:11px 13px;
+  border-bottom:1px solid #d5e0e6;
+  background:linear-gradient(90deg,#fff9e5,#f3f8fb);
+  box-shadow:inset 0 -1px 0 rgba(22,58,95,.05);
+}
+.quick-type-bar[hidden]{display:none!important}
+.quick-type-copy{min-width:180px;max-width:250px}
+.quick-type-copy strong{display:block;color:var(--navy);font-size:13px}
+.quick-type-copy span{display:block;margin-top:2px;color:#647681;font-size:10px;line-height:1.35}
+.quick-type-actions{display:flex;align-items:center;gap:7px;flex:1;flex-wrap:wrap;padding:2px 1px}
+.quick-type-button{
+  flex:none;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:34px;
+  border:1px solid #bdcbd4;
+  border-radius:999px;
+  padding:7px 11px;
+  background:#fff;
+  color:#294455;
+  box-shadow:0 2px 5px rgba(28,61,84,.06);
+  font-size:11px;
+  white-space:nowrap;
+}
+.quick-type-button:hover{border-color:var(--blue);background:#eef6fb;color:var(--navy)}
+.quick-type-swatch{width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.22);flex:none}
+.quick-type-button.custom{border-style:dashed}
+.quick-type-button.undo{color:var(--danger);border-color:#d9aaaa;background:#fffafa}
+.quick-type-button.undo:hover{background:#fbeaea;border-color:var(--danger)}
+@media(max-width:760px){
+  .quick-type-bar{align-items:flex-start;flex-direction:column;gap:8px}
+  .quick-type-copy{min-width:0;max-width:none}
+  .quick-type-actions{width:100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}
+}
+@media print{.quick-type-bar{display:none!important}.booking-draft{display:none!important}}
+
+
+
+/* Professional editor interactions */
+.history-controls{display:flex;gap:5px;padding-right:4px;border-right:1px solid #d8e1e7}
+.toolbar .tool-button{background:#edf3f6;color:#294455;border:1px solid #c6d3dc;padding:8px 10px;box-shadow:none}
+.toolbar .tool-button:hover:not(:disabled){background:#dfeaf0;color:var(--navy)}
+.toolbar .tool-button:disabled{opacity:.42}
+.file-state,.overlap-state{display:inline-flex;align-items:center;gap:7px;min-height:31px;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800;white-space:nowrap}
+.file-state{margin-left:auto;border:1px solid #d5b56d;background:#fff7df;color:#735414}
+.file-state.saved{border-color:#9bc6aa;background:#edf8f1;color:#28613c}
+.file-state-dot{width:8px;height:8px;border-radius:50%;background:#d69420;box-shadow:0 0 0 3px rgba(214,148,32,.13)}
+.file-state.saved .file-state-dot{background:#3b9361;box-shadow:0 0 0 3px rgba(59,147,97,.13)}
+.overlap-state{border:1px solid #e0ae79;background:#fff1e3;color:#8a4919}
+.overlap-state::before{content:'!';display:grid;place-items:center;width:17px;height:17px;border-radius:50%;background:#d97829;color:white;font-size:11px}
+.floating-menu{position:fixed!important;z-index:1600;width:min(310px,calc(100vw - 24px));max-height:min(520px,calc(100vh - 24px));overflow:auto;border:1px solid #b9c8d2;border-radius:12px;background:#fff;box-shadow:0 18px 48px rgba(13,37,55,.25);padding:8px}
+.quick-type-bar{display:block;left:12px;top:12px;background:#fff;border-bottom:0;transform-origin:top left;animation:menu-pop .12s ease-out}
+.quick-type-bar[hidden],.booking-context-menu[hidden]{display:none!important}
+@keyframes menu-pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.floating-menu-heading{padding:7px 8px 9px;border-bottom:1px solid #e0e7eb;margin-bottom:5px}
+.floating-menu-heading strong{display:block;color:var(--navy);font-size:13px}
+.floating-menu-heading span{display:block;color:#6b7d88;font-size:10px;line-height:1.35;margin-top:2px}
+.quick-type-actions{display:grid;grid-template-columns:1fr;gap:3px;padding:0}
+.quick-type-button,.context-menu-item{width:100%;min-height:36px;justify-content:flex-start;border:0;border-radius:7px;padding:8px 9px;background:white;color:#294455;box-shadow:none;font-size:12px;text-align:left}
+.quick-type-button:hover,.context-menu-item:hover{background:#eaf3f8;color:var(--navy)}
+.quick-type-button.custom{border:0}
+.quick-type-button.undo{border:0;background:white;color:var(--danger)}
+.quick-type-button.undo:hover{background:#fbeaea}
+.booking-context-menu{left:12px;top:12px}
+.context-menu-title{padding:7px 8px 8px;color:#667985;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.context-menu-divider{height:1px;background:#e1e7eb;margin:5px 3px}
+.context-menu-item{display:flex;align-items:center;gap:9px}
+.context-menu-item.danger{color:var(--danger)}
+.context-menu-item .menu-icon{width:18px;text-align:center;font-size:14px;flex:none}
+.context-menu-type{display:flex;align-items:center;gap:8px}
+.context-menu-swatch{width:11px;height:11px;border-radius:50%;border:1px solid rgba(0,0,0,.22);flex:none}
+.booking-block.multi-selected{outline:3px solid var(--yellow);outline-offset:1px;z-index:7}
+.booking-block.selected.multi-selected{outline-color:var(--navy);z-index:9}
+.booking-block.booking-conflict{box-shadow:inset 0 0 0 2px #e37a25,0 0 0 1px rgba(255,255,255,.7)}
+.booking-block.booking-conflict::after{content:'!';position:absolute;left:3px;top:3px;z-index:13;width:16px;height:16px;display:grid;place-items:center;border-radius:50%;background:#d96f1f;color:#fff;border:1px solid rgba(255,255,255,.85);font-size:10px;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.25);pointer-events:none}
+.booking-block.selected.booking-conflict .booking-content{padding-left:19px}
+.overlap-warning{margin:0 0 11px;padding:9px 10px;border:1px solid #edbd8c;border-left:4px solid #df7725;border-radius:6px;background:#fff3e8;color:#78441e;font-size:11px;line-height:1.4}
+.overlap-warning strong{display:block;margin-bottom:2px;color:#8b4316}
+.multi-selection-summary{margin-bottom:12px;padding:10px;border-radius:7px;background:#fff8dc;border:1px solid #e8d080;color:#5f531f;font-size:12px;line-height:1.4}
+.bulk-check{display:flex;align-items:center;gap:7px;font-size:12px;color:#4f606c;margin:8px 0}
+.bulk-check input{width:auto}
+.selection-panel .multi-help{margin-top:10px;font-size:11px;line-height:1.45;color:#6a7a85}
+body.context-menu-open .day-track{cursor:default}
+@media(max-width:980px){.file-state{margin-left:0}.toolbar{align-items:center}.history-controls{border-right:0}}
+@media(max-width:600px){.file-state,.overlap-state{width:100%;justify-content:center}.history-controls{width:100%}.history-controls button{flex:1}.floating-menu{width:min(330px,calc(100vw - 16px))}}
+@media print{.booking-context-menu,.floating-menu,.file-state,.overlap-state,.history-controls{display:none!important}.booking-block.multi-selected,.booking-block.booking-conflict{outline:none!important;box-shadow:none!important}.booking-block.booking-conflict::after{display:none!important}}
+
+
+
+/* Appearance switch: darkens the editor while preserving the printed sheet. */
+.theme-toggle{
+  position:fixed;
+  top:11px;
+  right:14px;
+  z-index:2200;
+  width:66px;
+  height:36px;
+  padding:3px;
+  border:1px solid rgba(25,49,66,.24);
+  border-radius:999px;
+  background:#eef3f6;
+  color:#365064;
+  box-shadow:0 4px 14px rgba(11,31,46,.18);
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  align-items:center;
+  cursor:pointer;
+  transition:background .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+.theme-toggle:hover{box-shadow:0 7px 18px rgba(11,31,46,.24)}
+.theme-toggle:focus-visible{outline:3px solid rgba(228,197,69,.7);outline-offset:2px}
+.theme-toggle-icon{position:relative;z-index:2;display:grid;place-items:center;font-size:15px;line-height:1;pointer-events:none;transition:color .2s ease,opacity .2s ease}
+.theme-toggle-icon.sun{color:#7b5a00}.theme-toggle-icon.moon{color:#667b89;opacity:.58}
+.theme-toggle-thumb{position:absolute;left:4px;top:4px;width:28px;height:28px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(20,42,58,.24);transition:transform .22s ease,background .22s ease}
+html[data-theme="dark"] .theme-toggle{background:#1b2a35;border-color:#435967;color:#dce8ef}
+html[data-theme="dark"] .theme-toggle-thumb{transform:translateX(30px);background:#334958}
+html[data-theme="dark"] .theme-toggle-icon.sun{color:#93a5b1;opacity:.55}
+html[data-theme="dark"] .theme-toggle-icon.moon{color:#f3d76f;opacity:1}
+body:not(.startup-mode)>.toolbar{padding-right:96px}
+
+html[data-theme="dark"]{color-scheme:dark}
+html[data-theme="dark"] body{background:#0d141a;color:#e5edf3}
+html[data-theme="dark"] .toolbar{background:#121b22;border-bottom-color:#334550;box-shadow:0 3px 16px rgba(0,0,0,.32)}
+html[data-theme="dark"] .toolbar .tool-button{background:#1c2932;color:#dce7ee;border-color:#405460}
+html[data-theme="dark"] .toolbar .tool-button:hover:not(:disabled){background:#273843;color:#fff}
+html[data-theme="dark"] .toolbar .file-label.secondary,
+html[data-theme="dark"] button.secondary{background:#425562;color:#fff}
+html[data-theme="dark"] .main{background:transparent}
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .collapsible,
+html[data-theme="dark"] .selection-panel{background:#151f27;border-color:#354852;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+html[data-theme="dark"] .panel-body,
+html[data-theme="dark"] .collapsible-body{background:#151f27}
+html[data-theme="dark"] .field label,
+html[data-theme="dark"] .hours-day,
+html[data-theme="dark"] .wizard-hours-row strong{color:#d8e3ea}
+html[data-theme="dark"] .field input,
+html[data-theme="dark"] .field select,
+html[data-theme="dark"] .footer-field textarea,
+html[data-theme="dark"] .wizard-hours-row input{background:#0d161d;color:#eef5f8;border-color:#40535e}
+html[data-theme="dark"] .field input::placeholder,
+html[data-theme="dark"] textarea::placeholder{color:#748997}
+html[data-theme="dark"] .settings-subheading{color:#9cc7e4;border-bottom-color:#374b57}
+html[data-theme="dark"] .help{background:#1c2932;color:#a9bac5;border-left-color:var(--yellow)}
+html[data-theme="dark"] .hours-row,
+html[data-theme="dark"] .session-type-row,
+html[data-theme="dark"] .booking-row,
+html[data-theme="dark"] .lane-check{background:#1a252e;border-color:#3a4e59;color:#dfe8ed}
+html[data-theme="dark"] .session-type-copy small,
+html[data-theme="dark"] .booking-row small,
+html[data-theme="dark"] .pool-area-note,
+html[data-theme="dark"] .selection-empty,
+html[data-theme="dark"] .interaction-help{color:#9eb0bb}
+html[data-theme="dark"] .auto-range-card{background:#172833;border-color:#385260}
+html[data-theme="dark"] .auto-range-card strong{color:#b8dcf2}
+html[data-theme="dark"] .auto-range-card span{color:#a6bac6}
+html[data-theme="dark"] .auto-range-value{color:#7fc3ed!important}
+html[data-theme="dark"] .preview-wrap{background:#080d11}
+html[data-theme="dark"] .sheet{background:#fff;color:#17212b;box-shadow:0 4px 22px rgba(0,0,0,.5)}
+html[data-theme="dark"] .file-state{background:#1b2831;border-color:#41545f;color:#cbd9e1}
+html[data-theme="dark"] .file-state.dirty{background:#33291b;border-color:#6e5a37;color:#f0d79c}
+html[data-theme="dark"] .file-state.saved{background:#173025;border-color:#365f4a;color:#b9dfca}
+html[data-theme="dark"] .overlap-state{background:#3a2519;border-color:#86512e;color:#f0c49d}
+html[data-theme="dark"] .floating-menu,
+html[data-theme="dark"] .booking-context-menu{background:#15212a;border-color:#3b505c;box-shadow:0 16px 38px rgba(0,0,0,.5)}
+html[data-theme="dark"] .quick-type-button,
+html[data-theme="dark"] .context-menu-item{background:#15212a;color:#dce7ed}
+html[data-theme="dark"] .quick-type-button:hover,
+html[data-theme="dark"] .context-menu-item:hover{background:#243640;color:#fff}
+html[data-theme="dark"] .context-menu-title{color:#94a9b5}
+html[data-theme="dark"] .context-menu-divider{background:#344953}
+html[data-theme="dark"] .confirm-dialog{background:#17222b;border-color:#40545f}
+html[data-theme="dark"] .confirm-dialog h3{color:#b9ddf3}
+html[data-theme="dark"] .confirm-dialog p{color:#a9bac5}
+html[data-theme="dark"] .start-screen{background:
+  radial-gradient(circle at 12% 10%,rgba(228,197,69,.12),transparent 26%),
+  radial-gradient(circle at 88% 85%,rgba(65,135,181,.18),transparent 34%),
+  linear-gradient(145deg,#07121b 0%,#102b3d 52%,#07141e 100%)}
+html[data-theme="dark"] .start-card{background:#121c24;border-color:#304653}
+html[data-theme="dark"] .start-card-top{background:linear-gradient(135deg,#17232c 0%,#101920 100%);border-bottom-color:#31434e}
+html[data-theme="dark"] .brand-copy strong,
+html[data-theme="dark"] .start-card h1{color:#eef5f8}
+html[data-theme="dark"] .brand-copy span,
+html[data-theme="dark"] .start-card-top>p,
+html[data-theme="dark"] .version-note{color:#9db0bc}
+html[data-theme="dark"] .start-action{background:#18242d;color:#edf4f8;border-color:#3c515d;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+html[data-theme="dark"] .start-action:hover{border-color:#6d9db8;box-shadow:0 16px 34px rgba(0,0,0,.34)}
+html[data-theme="dark"] .start-action.primary{background:#174b6c;border-color:#2d759e}
+html[data-theme="dark"] .start-action small{color:#9fb2be}
+html[data-theme="dark"] .wizard-card{background:#141f27}
+html[data-theme="dark"] .wizard-header,
+html[data-theme="dark"] .wizard-footer{background:#101920;border-color:#344751}
+html[data-theme="dark"] .wizard-heading h2,
+html[data-theme="dark"] .wizard-step h3{color:#c1e1f4}
+html[data-theme="dark"] .wizard-heading p,
+html[data-theme="dark"] .wizard-step>.step-copy,
+html[data-theme="dark"] .wizard-footer-copy{color:#9eb1bd}
+html[data-theme="dark"] .centre-option{background:#17232b;color:#e7eef2;border-color:#3b4f5a}
+html[data-theme="dark"] .centre-option:hover{border-color:#6ea2bf}
+html[data-theme="dark"] .centre-option.selected{background:#193447;border-color:#4a9ac7;outline-color:rgba(74,154,199,.28)}
+html[data-theme="dark"] .centre-option strong{color:#b9ddf3}
+html[data-theme="dark"] .centre-option small{color:#9fb0ba}
+html[data-theme="dark"] .wizard-hours-row{background:#18242d;border-color:#3a4d57}
+html[data-theme="dark"] .import-notice{background:#362f1b;color:#eadba6;border-color:#74612c}
+
+@media(max-width:600px){
+  .theme-toggle{top:8px;right:8px;transform:scale(.94);transform-origin:top right}
+  body:not(.startup-mode)>.toolbar{padding-right:82px}
+}
+@media print{
+  .theme-toggle{display:none!important}
+  html[data-theme="dark"],html[data-theme="dark"] body{color-scheme:light;background:#fff!important;color:#17212b!important}
+  html[data-theme="dark"] .sheet{background:#fff!important;color:#17212b!important;box-shadow:none!important}
+}
+
 </style>
 </head>
-<body>
+<body class="startup-mode">
+<button id="themeToggle" class="theme-toggle" type="button" role="switch" aria-checked="false" aria-label="Use dark mode" title="Use dark mode">
+  <span class="theme-toggle-icon sun" aria-hidden="true">☀</span>
+  <span class="theme-toggle-icon moon" aria-hidden="true">☾</span>
+  <span class="theme-toggle-thumb" aria-hidden="true"></span>
+</button>
+<section class="start-screen" id="startScreen" aria-labelledby="startTitle">
+  <div class="start-card">
+    <div class="start-card-top">
+      <div class="brand-lockup"><span class="brand-mark" aria-hidden="true"></span><div class="brand-copy"><strong>Timetable Creator</strong><span>Fife Sports and Leisure Trust</span></div></div>
+      <h1 id="startTitle">Create and manage pool timetables.</h1>
+      <p>Start a new timetable with guided setup, or open one you have already saved.</p>
+    </div>
+    <div class="start-actions">
+      <button id="startCreateBtn" class="start-action primary" type="button"><span class="start-action-icon">＋</span><span><strong>Create timetable</strong><small>Choose a centre, set the pool details and enter the opening hours.</small></span></button>
+      <label class="start-action start-file"><input id="startOpenInput" type="file" accept="application/json,.json"><span class="start-file-inner"><span class="start-action-icon">↥</span><span><strong>Open timetable</strong><small>Select a saved timetable to continue working on it.</small></span></span></label>
+    </div>
+    <div class="version-note">Your latest work is saved automatically in this browser.</div>
+  </div>
+</section>
 <header class="app-header">
-  <h1>Pool Timetable Creator</h1>
-  <p>Create, edit, save and print a lane-based weekly pool timetable.</p>
+  <span class="brand-mark" aria-hidden="true"></span>
+  <div class="app-heading"><h1>Timetable Creator</h1><p id="appCentreSubtitle">Pool timetable workspace</p></div>
+  <div class="header-project"><strong id="headerProjectName">Untitled timetable</strong><span id="headerProjectMeta">Pool timetable</span></div>
 </header>
 <div class="toolbar">
-  <button id="newBtn" class="secondary">New timetable</button>
-  <button id="downloadBtn">Save timetable</button>
-  <label class="file-label secondary">Upload timetable<input id="uploadInput" type="file" accept="application/json,.json"></label>
-  <button id="printBtn" class="warning">Print / Save PDF</button>
+  <button id="homeBtn" class="home-button" type="button">Projects</button>
+  <button id="newBtn" class="secondary" type="button">New timetable</button>
+  <div class="history-controls" aria-label="Edit history">
+    <button id="undoBtn" class="tool-button" type="button" title="Undo (Ctrl+Z)" disabled><span aria-hidden="true">↶</span> Undo</button>
+    <button id="redoBtn" class="tool-button" type="button" title="Redo (Ctrl+Y)" disabled><span aria-hidden="true">↷</span> Redo</button>
+  </div>
+  <button id="downloadBtn" class="save-button" type="button">Save timetable</button>
+  <label class="file-label secondary">Open timetable<input id="uploadInput" type="file" accept="application/json,.json"></label>
+  <button id="printBtn" class="warning" type="button">Print / Save PDF</button>
+  <span class="overlap-state" id="overlapState" hidden></span>
+  <span class="file-state dirty" id="fileState" title="Your work is autosaved in this browser, but has not been saved to a timetable file."><span class="file-state-dot" aria-hidden="true"></span><span id="fileStateText">Not saved to file</span></span>
   <span class="status" id="status">Ready</span>
 </div>
+<div class="import-notice" id="importNotice"></div>
 <main class="main">
   <aside class="editor-panel editor-stack">
-    <details class="collapsible" open>
+    <details class="collapsible" id="settingsPanel">
       <summary>Timetable settings</summary>
       <div class="collapsible-body">
-        <div class="field"><label for="centreInput">Centre</label><select id="centreInput"><option value="east-sands">East Sands Leisure Centre</option><option value="cupar">Cupar Sports Centre</option></select></div>
+        <div class="field"><label for="projectNameInput">Timetable name</label><input id="projectNameInput" placeholder="e.g. Summer Pool Programme"></div>
+        <div class="field"><label for="centreInput">Centre</label><select id="centreInput"></select></div>
         <div class="help">Choosing a centre updates the subtitle and printed contact details automatically.</div>
         <div class="field"><label for="titleInput">Printed title</label><input id="titleInput" value="Main Pool Timetable"></div>
         <div class="field"><label for="subtitleInput">Subtitle / effective date</label><input id="subtitleInput" value="East Sands Leisure Centre"></div>
@@ -199,18 +598,14 @@ button:disabled{opacity:.55;cursor:not-allowed}
         <div class="field"><label for="venueNameInput">Venue name</label><input id="venueNameInput" value="East Sands Leisure Centre"></div>
         <div class="field"><label for="venueAddressInput">Venue address and telephone</label><input id="venueAddressInput" value="St Mary Street, St Andrews, KY16 8LH · 01334 659473"></div>
         <div class="field footer-field"><label for="admissionsPolicyInput">Admissions policy / adult-to-child ratio</label><textarea id="admissionsPolicyInput">Children under 8 years must be accompanied by an adult aged 16 or over in the same water. Parent/child ratios: 1 adult to 2 children under 5 years, or 1 adult to 3 children aged 5–7 years.</textarea></div>
-        <div class="help">These details appear along the bottom of the printed timetable beside the Fife Sports and Leisure Trust wordmark.</div>
+        <div class="help">These details appear along the bottom of the printed timetable beside the Fife Sports and Leisure Trust logo.</div>
         <div class="inline-fields">
           <div class="field"><label for="laneCountInput">Number of lanes</label><input id="laneCountInput" type="number" min="1" max="12" value="4"></div>
           <div class="field"><label for="intervalInput">Grid interval</label><select id="intervalInput"><option value="15">15 minutes</option><option value="30">30 minutes</option></select></div>
         </div>
 
-        <h3 class="settings-subheading">Whole timetable view</h3>
-        <div class="inline-fields">
-          <div class="field"><label for="viewStartInput">View starts</label><input id="viewStartInput" type="time" step="900" value="07:00"></div>
-          <div class="field"><label for="viewEndInput">View finishes</label><input id="viewEndInput" type="time" step="900" value="22:00"></div>
-        </div>
-        <div class="help">This sets the shared horizontal time range shown across every day, for example 06:00–22:00 or 07:00–22:00.</div>
+        <div class="auto-range-card"><div><strong>Automatic timetable range</strong><span>The printed view follows the earliest opening and latest closing time.</span></div><span class="auto-range-value" id="autoRangeValue">07:00–22:00</span></div>
+        <input id="viewStartInput" type="hidden" value="07:00"><input id="viewEndInput" type="hidden" value="22:00">
 
         <h3 class="settings-subheading">Opening hours by day</h3>
         <div class="hours-grid" id="openingHoursGrid">
@@ -283,12 +678,16 @@ button:disabled{opacity:.55;cursor:not-allowed}
     <section class="selection-panel" id="selectionPanel">
       <div class="panel-title">Current booking <span class="selection-badge" id="selectionBadge">None selected</span></div>
       <div class="panel-body" id="selectionBody">
-        <div class="selection-empty">Tap or click a booking in the timetable to select it. You can then drag it, resize its edges, or fine-tune it here.</div>
+        <div class="selection-empty">Drag across an empty part of the timetable to create a booking. Select an existing booking to edit its title, times, lanes, session type and colour here.</div>
       </div>
     </section>
   </aside>
   <section class="panel preview-panel">
-    <div class="panel-title">Live print preview</div>
+    <div class="panel-title">Timetable — drag across an empty area to create a booking</div>
+    <div class="quick-type-bar floating-menu" id="quickTypeBar" hidden role="menu" aria-live="polite" aria-label="Choose a booking type">
+      <div class="floating-menu-heading"><strong>Choose booking type</strong><span>Further edits remain available in Current booking.</span></div>
+      <div class="quick-type-actions" id="quickTypeActions"></div>
+    </div>
     <div class="preview-wrap"><div class="sheet" id="sheet">
       <div class="sheet-heading"><h2>Main Pool Timetable</h2><div class="subtitle">East Sands Leisure Centre</div></div>
       <div class="timetable">
@@ -305,6 +704,22 @@ button:disabled{opacity:.55;cursor:not-allowed}
     </div></div>
   </section>
 </main>
+
+
+<div id="setupWizard" class="wizard-overlay" role="dialog" aria-modal="true" aria-labelledby="wizardTitle">
+  <div class="wizard-card">
+    <div class="wizard-header"><span class="brand-mark" aria-hidden="true"></span><div class="wizard-heading"><h2 id="wizardTitle">Create timetable</h2><p id="wizardSubtitle">Project and centre</p></div><div class="wizard-progress" aria-label="Setup progress"><span class="wizard-dot active"></span><span class="wizard-dot"></span><span class="wizard-dot"></span></div></div>
+    <div class="wizard-body">
+      <section class="wizard-step active" data-wizard-step="0"><h3>Name the project and choose a centre</h3><p class="step-copy">The centre selection fills the subtitle, address and telephone number automatically.</p><div class="wizard-fields"><div class="field full"><label for="wizardProjectName">Project name</label><input id="wizardProjectName" placeholder="e.g. East Sands Summer Pool Timetable"></div><div class="field full"><label>Centre</label><div class="centre-grid" id="wizardCentreGrid"></div></div><div id="customCentreFields" class="wizard-fields full" style="display:none"><div class="field"><label for="wizardCustomName">Centre name</label><input id="wizardCustomName"></div><div class="field"><label for="wizardCustomPhone">Telephone</label><input id="wizardCustomPhone"></div><div class="field full"><label for="wizardCustomAddress">Address</label><input id="wizardCustomAddress"></div></div></div></section>
+      <section class="wizard-step" data-wizard-step="1"><h3>Set the timetable basics</h3><p class="step-copy">These settings shape the output but can still be edited later.</p><div class="wizard-fields"><div class="field full"><label for="wizardPrintedTitle">Printed title</label><input id="wizardPrintedTitle" value="Main Pool Timetable"></div><div class="field"><label for="wizardLaneCount">Number of lanes</label><input id="wizardLaneCount" type="number" min="1" max="12" value="4"></div><div class="field"><label for="wizardInterval">Grid interval</label><select id="wizardInterval"><option value="15">15 minutes</option><option value="30">30 minutes</option></select></div></div></section>
+      <section class="wizard-step" data-wizard-step="2"><h3>Enter opening times</h3><p class="step-copy">The timetable will automatically span from the earliest opening time to the latest closing time.</p><div class="wizard-hours" id="wizardHours"></div></section>
+    </div>
+    <div class="wizard-footer"><span class="wizard-footer-copy" id="wizardFooterCopy">Step 1 of 3</span><div class="wizard-footer-actions"><button id="wizardCancelBtn" class="secondary" type="button">Cancel</button><button id="wizardBackBtn" class="secondary" type="button" style="display:none">Back</button><button id="wizardNextBtn" type="button">Continue</button></div></div>
+  </div>
+</div>
+
+
+<div id="bookingContextMenu" class="booking-context-menu floating-menu" hidden role="menu" aria-label="Booking actions"></div>
 
 <div id="deleteConfirmOverlay" class="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle" aria-describedby="deleteConfirmText">
   <div class="confirm-dialog">
@@ -339,10 +754,19 @@ const DEFAULT_SESSION_TYPES=[
 ];
 const SNAP=15;
 const CENTRES={
- 'east-sands':{subtitle:'East Sands Leisure Centre',venueName:'East Sands Leisure Centre',venueAddress:'St Mary Street, St Andrews, KY16 8LH · 01334 659473'},
- 'cupar':{subtitle:'Cupar Sports Centre',venueName:'Cupar Sports Centre',venueAddress:'Carslogie Road, Cupar, KY15 4HY · 01334 659324'}
+ 'east-sands':{subtitle:'East Sands Leisure Centre',venueName:'East Sands Leisure Centre',address:'St Mary Street, St Andrews, KY16 8LH',phone:'01334 659473',venueAddress:'St Mary Street, St Andrews, KY16 8LH · 01334 659473'},
+ 'cupar':{subtitle:'Cupar Sports Centre',venueName:'Cupar Sports Centre',address:'Carslogie Road, Cupar, KY15 4HY',phone:'01334 659324',venueAddress:'Carslogie Road, Cupar, KY15 4HY · 01334 659324'},
+ 'leven':{subtitle:'Leven Leisure Centre',venueName:'Leven Leisure Centre',address:'Promenade, Leven, KY8 4PA',phone:'01334 659325',venueAddress:'Promenade, Leven, KY8 4PA · 01334 659325'},
+ 'kirkcaldy':{subtitle:'Kirkcaldy Leisure Centre',venueName:'Kirkcaldy Leisure Centre',address:'Esplanade, Kirkcaldy, KY1 1HR',phone:'01592 583306',venueAddress:'Esplanade, Kirkcaldy, KY1 1HR · 01592 583306'},
+ 'michael-woods':{subtitle:'Michael Woods Sports and Leisure Centre',venueName:'Michael Woods Sports and Leisure Centre',address:'Viewfield, Glenrothes, KY6 2RD',phone:'01592 583305',venueAddress:'Viewfield, Glenrothes, KY6 2RD · 01592 583305'},
+ 'beacon':{subtitle:'Beacon Leisure Centre',venueName:'Beacon Leisure Centre',address:'Lammerlaws Road, Burntisland, KY3 9BS',phone:'01592 583383',venueAddress:'Lammerlaws Road, Burntisland, KY3 9BS · 01592 583383'},
+ 'bowhill':{subtitle:'Bowhill Swimming Pool',venueName:'Bowhill Swimming Pool',address:'Station Road, Cardenden, Lochgelly, KY5 0BW',phone:'01592 583304',venueAddress:'Station Road, Cardenden, Lochgelly, KY5 0BW · 01592 583304'},
+ 'carnegie':{subtitle:'Carnegie Leisure Centre',venueName:'Carnegie Leisure Centre',address:'46 Pilmuir Street, Dunfermline, KY12 0QE',phone:'01383 602304',venueAddress:'46 Pilmuir Street, Dunfermline, KY12 0QE · 01383 602304'},
+ 'cowdenbeath':{subtitle:'Cowdenbeath Leisure Centre',venueName:'Cowdenbeath Leisure Centre',address:'Pit Road, Cowdenbeath, KY4 9NN',phone:'01383 602305',venueAddress:'Pit Road, Cowdenbeath, KY4 9NN · 01383 602305'},
+ 'custom':{subtitle:'Custom centre',venueName:'Custom centre',address:'',phone:'',venueAddress:''}
 };
 const freshState=()=>({
+ projectId:uid(),projectName:'Untitled timetable',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),
  centreId:'east-sands',title:'Main Pool Timetable',subtitle:'East Sands Leisure Centre',venueName:'East Sands Leisure Centre',venueAddress:'St Mary Street, St Andrews, KY16 8LH · 01334 659473',admissionsPolicy:'Children under 8 years must be accompanied by an adult aged 16 or over in the same water. Parent/child ratios: 1 adult to 2 children under 5 years, or 1 adult to 3 children aged 5–7 years.',laneCount:4,interval:15,
  viewStart:'07:00',viewEnd:'22:00',days:DEFAULT_DAYS.map(d=>({...d})),
  sessionTypes:DEFAULT_SESSION_TYPES.map(t=>({...t})),bookings:[]
@@ -418,7 +842,7 @@ function bind(){
  $('downloadBtn').addEventListener('click',downloadJson);
  $('uploadInput').addEventListener('change',uploadJson);
  $('printBtn').addEventListener('click',printTimetable);
- $('newBtn').addEventListener('click',()=>{if(confirm('Clear the current timetable and start again?')){state=freshState();selectedId=null;syncInputs();resetForm();saveAndRender()}});
+ $('newBtn').addEventListener('click',openCreatorWizard);
  $('cancelDeleteBtn').addEventListener('click',closeDeleteConfirm);
  $('confirmDeleteBtn').addEventListener('click',confirmDeleteBooking);
  $('deleteConfirmOverlay').addEventListener('click',e=>{if(e.target===$('deleteConfirmOverlay'))closeDeleteConfirm()});
@@ -446,7 +870,7 @@ function updateDayHours(e){
  }
  const affected=state.bookings.filter(b=>b.day===day&&(mins(b.start)<mins(open)||mins(b.end)>mins(close)));
  if(affected.length&&!confirm(`${affected.length} existing booking${affected.length===1?' is':'s are'} outside these new opening hours. Keep the new hours anyway?`)){syncInputs();return}
- state.days[day].open=open;state.days[day].close=close;saveAndRender();
+ state.days[day].open=open;state.days[day].close=close;autoFitView();saveAndRender();
 }
 function updateRangeWarning(){
  const outside=state.days.filter(d=>mins(d.open)<mins(state.viewStart)||mins(d.close)>mins(state.viewEnd));
@@ -573,7 +997,7 @@ function renderList(){
 }
 function renderSelectionPanel(){
  const b=selected(),body=$('selectionBody'),badge=$('selectionBadge');
- if(!b){badge.textContent='None selected';body.innerHTML='<div class="selection-empty">Tap or click a booking in the timetable to select it. You can then drag it, resize its edges, or fine-tune it here.</div>';return}
+ if(!b){badge.textContent='None selected';body.innerHTML='<div class="selection-empty">Drag across an empty part of the timetable to create a booking. Select an existing booking to edit its title, times, lanes, session type and colour here.</div>';return}
  badge.textContent='Selected';
  body.innerHTML=`
   <div class="field"><label for="fineActivity">Activity</label><input id="fineActivity" value="${escapeHtml(b.activity)}"></div>
@@ -589,9 +1013,9 @@ function renderSelectionPanel(){
   <div class="field"><label for="fineColour">Colour</label><div class="color-field"><input id="fineColour" type="color" value="${bookingColour(b)}"><span class="help" style="margin:0">Fine-tune this booking’s colour.</span></div></div>
   <div class="adjust-row"><button type="button" id="timeBack">←</button><div class="adjust-value">Move 15 minutes</div><button type="button" id="timeForward">→</button></div>
   <div class="adjust-row" style="margin-top:7px"><button type="button" id="laneUp">↑</button><div class="adjust-value">Move lane range</div><button type="button" id="laneDown">↓</button></div>
-  <div class="form-actions"><button type="button" id="fineApply">Apply exact values</button><button type="button" id="fineEdit" class="secondary">Open add/edit form</button><button type="button" id="fineDelete" class="danger">Delete</button></div>
-  <div class="interaction-help"><strong>On the timetable:</strong> drag the middle to move; drag the left/right handles to change start or finish; drag the top/bottom handles to change the lane range. Everything snaps to 15 minutes or one lane.</div>`;
- $('timeBack').addEventListener('click',()=>nudgeTime(-SNAP));$('timeForward').addEventListener('click',()=>nudgeTime(SNAP));$('laneUp').addEventListener('click',()=>moveLane(-1));$('laneDown').addEventListener('click',()=>moveLane(1));$('fineEdit').addEventListener('click',()=>editBooking(b.id));$('fineDelete').addEventListener('click',()=>removeBooking(b.id));
+  <div class="form-actions"><button type="button" id="fineApply">Apply changes</button><button type="button" id="fineCopy" class="secondary">Copy booking</button><button type="button" id="fineDelete" class="danger">Delete</button></div>
+  <div class="interaction-help"><strong>On the timetable:</strong> drag an empty area to create a booking. Drag a selected booking to move it, or use its edge handles to resize it. Press <strong>Ctrl+C</strong> or use Copy booking, then click elsewhere to place the copy. Press Esc to cancel.</div>`;
+ $('timeBack').addEventListener('click',()=>nudgeTime(-SNAP));$('timeForward').addEventListener('click',()=>nudgeTime(SNAP));$('laneUp').addEventListener('click',()=>moveLane(-1));$('laneDown').addEventListener('click',()=>moveLane(1));$('fineCopy').addEventListener('click',()=>beginCopyBooking(b.id));$('fineDelete').addEventListener('click',()=>removeBooking(b.id));
  const updateFineCoverageUI=()=>{
   const laneMode=$('fineCoverageMode').value==='lanes';
   document.querySelectorAll('.fine-lane-field').forEach(field=>field.style.display=laneMode?'block':'none');
@@ -739,6 +1163,993 @@ async function downloadJson(){
  $('status').textContent=`Timetable downloaded as ${filename}`;
 }
 function uploadJson(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{const data=JSON.parse(r.result);if(!Array.isArray(data.bookings))throw new Error();normalizeState(data);selectedId=null;syncInputs();resetForm();saveAndRender();$('status').textContent=`Timetable uploaded: ${file.name}`}catch(err){alert('That file is not a valid timetable file.')}};r.readAsText(file);e.target.value=''}
+
+const APP_STORAGE_KEY='timetableCreatorV2:lastProject';
+const FILE_FORMAT='fslt-pool-timetable';
+const FILE_VERSION=2;
+const OLD_STORAGE_KEYS=['poolTimetableCreatorV11','poolTimetableCreatorV9','poolTimetableCreatorV8','poolTimetableCreatorV7','poolTimetableCreatorV6','poolTimetableCreatorV5','poolTimetableCreatorV4','poolTimetableCreatorV3','poolTimetableCreator'];
+let wizardStep=0,wizardCentreId='east-sands',lastImportWasLegacy=false;
+const legacyNormalizeState=normalizeState;
+const legacyBind=bind;
+
+function splitContactLine(line=''){
+ const parts=String(line).split('·').map(s=>s.trim()).filter(Boolean);
+ return {address:parts[0]||'',phone:parts.slice(1).join(' · ')||''};
+}
+function autoFitView(target=state){
+ const interval=[15,30].includes(Number(target.interval))?Number(target.interval):15;
+ const opens=(target.days||[]).map(d=>mins(d.open)).filter(Number.isFinite);
+ const closes=(target.days||[]).map(d=>mins(d.close)).filter(Number.isFinite);
+ if(!opens.length||!closes.length)return;
+ const start=Math.floor(Math.min(...opens)/interval)*interval;
+ const end=Math.ceil(Math.max(...closes)/interval)*interval;
+ target.viewStart=timeStr(start);
+ target.viewEnd=timeStr(Math.max(end,start+interval));
+}
+function centreIdFromText(value=''){
+ const needle=String(value).toLowerCase();
+ return Object.entries(CENTRES).find(([id,c])=>id!=='custom'&&(needle.includes(id.replace(/-/g,' '))||needle.includes(c.venueName.toLowerCase())))?.[0]||'custom';
+}
+function fromV2File(file){
+ const venue=file.venue||{},timetable=file.timetable||{},project=file.project||{},contact=[venue.address,venue.phone].filter(Boolean).join(' · ');
+ return {
+  projectId:project.id||uid(),projectName:project.name||timetable.title||'Imported timetable',createdAt:project.createdAt||new Date().toISOString(),updatedAt:project.updatedAt||new Date().toISOString(),
+  centreId:venue.id||centreIdFromText(venue.name||venue.subtitle),title:timetable.title||'Main Pool Timetable',subtitle:venue.subtitle||venue.name||'',venueName:venue.name||venue.subtitle||'',venueAddress:contact,
+  admissionsPolicy:timetable.admissionsPolicy||freshState().admissionsPolicy,laneCount:timetable.laneCount||4,interval:timetable.interval||15,days:timetable.days||DEFAULT_DAYS,
+  sessionTypes:Array.isArray(file.sessionTypes)?file.sessionTypes:DEFAULT_SESSION_TYPES,bookings:Array.isArray(file.bookings)?file.bookings:[]
+ };
+}
+normalizeState=function(candidate={}){
+ const isV2=candidate&&candidate.format===FILE_FORMAT&&Number(candidate.formatVersion)>=2;
+ const source=isV2?fromV2File(candidate):candidate;
+ legacyNormalizeState(source);
+ state.projectId=source.projectId||state.projectId||uid();
+ state.projectName=String(source.projectName||source.title||'Untitled timetable').trim()||'Untitled timetable';
+ state.createdAt=source.createdAt||state.createdAt||new Date().toISOString();
+ state.updatedAt=source.updatedAt||new Date().toISOString();
+ if(!CENTRES[state.centreId])state.centreId=centreIdFromText(`${state.venueName} ${state.subtitle}`);
+ if(state.centreId==='custom'&&!state.venueName)state.venueName=state.subtitle||'Custom centre';
+ autoFitView();
+ lastImportWasLegacy=!isV2;
+ return state;
+}
+function toV2File(current=state){
+ const contact=splitContactLine(current.venueAddress);
+ const preset=CENTRES[current.centreId]||{};
+ const now=new Date().toISOString();
+ return {
+  format:FILE_FORMAT,
+  formatVersion:FILE_VERSION,
+  app:{name:'Timetable Creator',version:'2.0'},
+  project:{id:current.projectId||uid(),name:current.projectName||current.title||'Untitled timetable',createdAt:current.createdAt||now,updatedAt:now},
+  venue:{id:current.centreId||'custom',name:current.venueName||current.subtitle||'Venue',subtitle:current.subtitle||current.venueName||'',address:contact.address||preset.address||'',phone:contact.phone||preset.phone||''},
+  timetable:{title:current.title||'Main Pool Timetable',laneCount:Number(current.laneCount)||4,interval:Number(current.interval)||15,days:(current.days||[]).map(d=>({name:d.name,open:d.open,close:d.close})),admissionsPolicy:current.admissionsPolicy||''},
+  sessionTypes:(current.sessionTypes||[]).map(t=>({id:t.id,name:t.name,defaultTitle:t.defaultTitle,colour:validHex(t.colour)})),
+  bookings:(current.bookings||[]).map(b=>({id:b.id,day:Number(b.day),start:b.start,end:b.end,activity:b.activity,coverageMode:coverageMode(b),lanes:[...(b.lanes||[])],sessionTypeId:b.sessionTypeId||'',sessionTypeName:b.sessionTypeName||bookingTypeName(b),colourHex:bookingColour(b)}))
+ };
+}
+function populateCentreSelect(){
+ const select=$('centreInput');
+ select.innerHTML=Object.entries(CENTRES).map(([id,c])=>`<option value="${id}">${escapeHtml(c.venueName)}</option>`).join('');
+}
+function updateProjectChrome(){
+ const range=`${state.viewStart}–${state.viewEnd}`;
+ $('headerProjectName').textContent=state.projectName||'Untitled timetable';
+ $('headerProjectMeta').textContent=`${state.venueName||state.subtitle||'Custom venue'} · ${range}`;
+ $('appCentreSubtitle').textContent=state.venueName||state.subtitle||'Pool timetable workspace';
+ if($('projectChip'))$('projectChip').textContent='';
+ $('autoRangeValue').textContent=range;
+ document.title=`${state.projectName||'Timetable'} · Timetable Creator`;
+}
+function showWorkspace(){document.body.classList.remove('startup-mode');$('setupWizard').classList.remove('open');updateProjectChrome()}
+function showStartScreen(){document.body.classList.add('startup-mode');$('setupWizard').classList.remove('open')}
+function showImportNotice(filename){
+ const box=$('importNotice');
+ box.classList.remove('show');
+ box.textContent='';
+}
+function makeNewStateFromWizard(){
+ const centre=CENTRES[wizardCentreId]||CENTRES.custom;
+ const custom=wizardCentreId==='custom';
+ const venueName=custom?$('wizardCustomName').value.trim():centre.venueName;
+ const address=custom?$('wizardCustomAddress').value.trim():centre.address;
+ const phone=custom?$('wizardCustomPhone').value.trim():centre.phone;
+ const next=freshState();
+ next.projectId=uid();next.projectName=$('wizardProjectName').value.trim();next.createdAt=new Date().toISOString();next.updatedAt=next.createdAt;
+ next.centreId=wizardCentreId;next.title=$('wizardPrintedTitle').value.trim()||'Main Pool Timetable';next.subtitle=venueName;next.venueName=venueName;next.venueAddress=[address,phone].filter(Boolean).join(' · ');
+ next.laneCount=clamp(Number($('wizardLaneCount').value)||4,1,12);next.interval=Number($('wizardInterval').value)||15;
+ next.days=DEFAULT_DAYS.map((d,i)=>({name:d.name,open:$(`wizardOpen-${i}`).value,close:$(`wizardClose-${i}`).value}));
+ autoFitView(next);return next;
+}
+function renderWizardCentres(){
+ $('wizardCentreGrid').innerHTML=Object.entries(CENTRES).map(([id,c])=>`<button type="button" class="centre-option${id===wizardCentreId?' selected':''}" data-centre-id="${id}"><strong>${escapeHtml(c.venueName)}</strong><small>${id==='custom'?'Enter your own centre details':escapeHtml(c.address)}</small></button>`).join('');
+ $('wizardCentreGrid').querySelectorAll('[data-centre-id]').forEach(btn=>btn.addEventListener('click',()=>{wizardCentreId=btn.dataset.centreId;renderWizardCentres();$('customCentreFields').style.display=wizardCentreId==='custom'?'grid':'none'}));
+}
+function renderWizardHours(days=DEFAULT_DAYS){
+ $('wizardHours').innerHTML=DEFAULT_DAYS.map((d,i)=>`<div class="wizard-hours-row"><strong>${d.name}</strong><label>Opens<input id="wizardOpen-${i}" type="time" step="900" value="${days[i]?.open||d.open}"></label><label>Closes<input id="wizardClose-${i}" type="time" step="900" value="${days[i]?.close||d.close}"></label></div>`).join('');
+}
+function setWizardStep(step){
+ wizardStep=clamp(step,0,2);
+ document.querySelectorAll('.wizard-step').forEach((panel,i)=>panel.classList.toggle('active',i===wizardStep));
+ document.querySelectorAll('.wizard-dot').forEach((dot,i)=>{dot.classList.toggle('active',i===wizardStep);dot.classList.toggle('complete',i<wizardStep)});
+ const labels=['Project and centre','Timetable basics','Opening times'];
+ $('wizardSubtitle').textContent=labels[wizardStep];$('wizardFooterCopy').textContent=`Step ${wizardStep+1} of 3`;
+ $('wizardBackBtn').style.display=wizardStep?'inline-block':'none';$('wizardNextBtn').textContent=wizardStep===2?'Create timetable':'Continue';
+}
+function openCreatorWizard(){
+ wizardCentreId=state?.centreId&&CENTRES[state.centreId]?state.centreId:'east-sands';
+ $('wizardProjectName').value='';$('wizardPrintedTitle').value='Main Pool Timetable';$('wizardLaneCount').value=state?.laneCount||4;$('wizardInterval').value=state?.interval||15;
+ $('wizardCustomName').value='';$('wizardCustomAddress').value='';$('wizardCustomPhone').value='';$('customCentreFields').style.display=wizardCentreId==='custom'?'grid':'none';
+ renderWizardCentres();renderWizardHours(state?.days||DEFAULT_DAYS);setWizardStep(0);$('setupWizard').classList.add('open');setTimeout(()=>$('wizardProjectName').focus(),0);
+}
+function validateWizardStep(){
+ if(wizardStep===0){
+  if(!$('wizardProjectName').value.trim()){alert('Enter a project name.');return false}
+  if(wizardCentreId==='custom'&&!$('wizardCustomName').value.trim()){alert('Enter the custom centre name.');return false}
+ }
+ if(wizardStep===1){const lanes=Number($('wizardLaneCount').value);if(!Number.isFinite(lanes)||lanes<1||lanes>12){alert('Enter between 1 and 12 lanes.');return false}}
+ if(wizardStep===2){for(let i=0;i<7;i++){const open=$(`wizardOpen-${i}`).value,close=$(`wizardClose-${i}`).value;if(!open||!close||mins(close)<=mins(open)){alert(`${DEFAULT_DAYS[i].name}'s closing time must be later than its opening time.`);return false}}}
+ return true;
+}
+function completeWizard(){
+ state=makeNewStateFromWizard();selectedId=null;editId=null;lastImportWasLegacy=false;$('importNotice').classList.remove('show');populateCentreSelect();syncInputs();renderLanePicker();resetForm();saveAndRender();showWorkspace();$('status').textContent='New timetable created';
+}
+function handleWizardNext(){if(!validateWizardStep())return;if(wizardStep<2)setWizardStep(wizardStep+1);else completeWizard()}
+function handleFile(file,input){
+ if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const data=JSON.parse(reader.result);const isV2=data&&data.format===FILE_FORMAT&&Number(data.formatVersion)>=2;if(!isV2&&!Array.isArray(data.bookings))throw new Error('Unrecognised timetable structure');normalizeState(data);selectedId=null;editId=null;populateCentreSelect();syncInputs();renderLanePicker();resetForm();saveAndRender();showWorkspace();showImportNotice(file.name);$('status').textContent=`Opened ${file.name}`}catch(err){console.error(err);alert('That file is not a recognised timetable file.')}};reader.readAsText(file);if(input)input.value='';
+}
+loadAutosave=function(){
+ let raw=null,legacy=false;
+ try{raw=localStorage.getItem(APP_STORAGE_KEY);if(!raw){for(const key of OLD_STORAGE_KEYS){raw=localStorage.getItem(key);if(raw){legacy=true;break}}}}catch(e){}
+ if(!raw)return false;
+ try{const saved=JSON.parse(raw);normalizeState(saved);lastImportWasLegacy=legacy||lastImportWasLegacy;return true}catch(e){console.warn('Could not restore autosave',e);return false}
+}
+saveAndRender=function(){
+ autoFitView();state.updatedAt=new Date().toISOString();
+ try{localStorage.setItem(APP_STORAGE_KEY,JSON.stringify(toV2File(state)))}catch(e){}
+ renderAll();updateProjectChrome();$('status').textContent='Saved in this browser';
+}
+syncSettings=function(){state.centreId=$('centreInput').value;state.title=$('titleInput').value;state.subtitle=$('subtitleInput').value;state.venueName=$('venueNameInput').value;state.venueAddress=$('venueAddressInput').value;state.admissionsPolicy=$('admissionsPolicyInput').value;saveAndRender()}
+applyCentrePreset=function(){const id=$('centreInput').value,p=CENTRES[id];if(!p)return;state.centreId=id;if(id!=='custom'){state.subtitle=p.subtitle;state.venueName=p.venueName;state.venueAddress=p.venueAddress;$('subtitleInput').value=p.subtitle;$('venueNameInput').value=p.venueName;$('venueAddressInput').value=p.venueAddress}saveAndRender()}
+updateRangeWarning=function(){const warning=$('rangeWarning');warning.style.display='none';warning.textContent='';$('autoRangeValue').textContent=`${state.viewStart}–${state.viewEnd}`}
+const legacyRenderSheet=renderSheet;
+renderSheet=function(){autoFitView();return legacyRenderSheet()};
+suggestedTimetableFilename=function(){const project=safeFilenamePart(state.projectName||state.title||'Timetable');const venue=safeFilenamePart(state.venueName||state.subtitle||'Venue');return `${venue||'Venue'}-${project||'Timetable'}.json`}
+downloadJson=async function(){
+ const exportData=toV2File(state),data=JSON.stringify(exportData,null,2),blob=new Blob([data],{type:'application/json'}),suggestedName=suggestedTimetableFilename();
+ try{if('showSaveFilePicker' in window){const handle=await window.showSaveFilePicker({suggestedName,types:[{description:'Timetable file',accept:{'application/json':['.json']}}]});const writable=await handle.createWritable();await writable.write(blob);await writable.close();$('status').textContent=`Saved ${handle.name}`;lastImportWasLegacy=false;$('importNotice').classList.remove('show');return}}catch(err){if(err?.name==='AbortError'){$('status').textContent='Save cancelled';return}}
+ let filename=prompt('Name this timetable file:',suggestedName);if(filename===null){$('status').textContent='Save cancelled';return}filename=safeFilenamePart(filename)||suggestedName;if(!filename.toLowerCase().endsWith('.json'))filename+='.json';
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);$('status').textContent=`Downloaded ${filename}`;lastImportWasLegacy=false;$('importNotice').classList.remove('show');
+}
+uploadJson=function(e){handleFile(e.target.files[0],e.target)}
+bind=function(){
+ legacyBind();
+ $('homeBtn').addEventListener('click',showStartScreen);$('startCreateBtn').addEventListener('click',openCreatorWizard);$('startOpenInput').addEventListener('change',e=>handleFile(e.target.files[0],e.target));
+ $('wizardCancelBtn').addEventListener('click',()=>{$('setupWizard').classList.remove('open');if(!state?.projectName)showStartScreen()});$('wizardBackBtn').addEventListener('click',()=>setWizardStep(wizardStep-1));$('wizardNextBtn').addEventListener('click',handleWizardNext);
+ $('setupWizard').addEventListener('click',e=>{if(e.target===$('setupWizard')&&state?.projectName)$('setupWizard').classList.remove('open')});
+}
+init=function(){
+ populateCentreSelect();bind();const restored=loadAutosave();syncInputs();renderLanePicker();renderSessionTypeControls();resetForm();renderAll();updateProjectChrome();
+ if(restored){showWorkspace();$('status').textContent='Restored last project'}
+ else showStartScreen();
+}
+
+
+/* Direct timetable booking creation */
+let createDrag=null;
+let suppressNextSheetClick=false;
+
+const baseSyncInputsForDirectEditor=syncInputs;
+syncInputs=function(){
+ baseSyncInputsForDirectEditor();
+ if($('projectNameInput'))$('projectNameInput').value=state.projectName||'';
+};
+
+const baseSyncSettingsForDirectEditor=syncSettings;
+syncSettings=function(){
+ if($('projectNameInput'))state.projectName=$('projectNameInput').value.trim()||'Untitled timetable';
+ baseSyncSettingsForDirectEditor();
+};
+
+function laneAtPointer(clientY,rect){
+ const ratio=clamp((clientY-rect.top)/Math.max(rect.height,1),0,.999999);
+ return clamp(Math.floor(ratio*state.laneCount)+1,1,state.laneCount);
+}
+function minuteAtPointer(clientX,rect,day){
+ const viewStart=mins(state.viewStart),viewEnd=mins(state.viewEnd),range=Math.max(state.interval,viewEnd-viewStart);
+ const raw=viewStart+clamp((clientX-rect.left)/Math.max(rect.width,1),0,1)*range;
+ const snapped=Math.round(raw/state.interval)*state.interval;
+ return clamp(snapped,mins(day.open),mins(day.close));
+}
+function updateCreateDraft(e){
+ if(!createDrag)return;
+ const {track,rect,day,anchorMinute,anchorLane}=createDrag;
+ let edgeMinute=minuteAtPointer(e.clientX,rect,day);
+ if(edgeMinute===anchorMinute){
+  edgeMinute=e.clientX>=createDrag.startX?anchorMinute+state.interval:anchorMinute-state.interval;
+ }
+ edgeMinute=clamp(edgeMinute,mins(day.open),mins(day.close));
+ let start=Math.min(anchorMinute,edgeMinute),end=Math.max(anchorMinute,edgeMinute);
+ if(end-start<state.interval){
+  if(anchorMinute+state.interval<=mins(day.close)){start=anchorMinute;end=anchorMinute+state.interval}
+  else{start=anchorMinute-state.interval;end=anchorMinute}
+ }
+ const edgeLane=laneAtPointer(e.clientY,rect);
+ const firstLane=Math.min(anchorLane,edgeLane),lastLane=Math.max(anchorLane,edgeLane);
+ const viewStart=mins(state.viewStart),viewEnd=mins(state.viewEnd),range=viewEnd-viewStart;
+ const left=(start-viewStart)/range*100,width=(end-start)/range*100;
+ const top=(firstLane-1)/state.laneCount*100,height=(lastLane-firstLane+1)/state.laneCount*100;
+ Object.assign(createDrag,{start,end,firstLane,lastLane});
+ createDrag.draft.style.left=`${left}%`;
+ createDrag.draft.style.width=`${width}%`;
+ createDrag.draft.style.top=`${top}%`;
+ createDrag.draft.style.height=`${height}%`;
+ createDrag.draft.textContent=`${timeStr(start)}–${timeStr(end)}`;
+ track.classList.add('dragging');
+}
+function startCreateBookingDrag(e){
+ if(e.button!==0||drag||createDrag||e.target.closest('.booking-block'))return;
+ hideQuickTypeBar();
+ const track=e.currentTarget,dayIndex=Number(track.dataset.day),day=state.days[dayIndex];
+ if(!day)return;
+ const rect=track.getBoundingClientRect();
+ let anchorMinute=minuteAtPointer(e.clientX,rect,day);
+ if(anchorMinute>=mins(day.close))anchorMinute=mins(day.close)-state.interval;
+ if(anchorMinute<mins(day.open)||anchorMinute>=mins(day.close))return;
+ const anchorLane=laneAtPointer(e.clientY,rect);
+ const draft=document.createElement('div');
+ draft.className='booking-draft';
+ draft.setAttribute('aria-hidden','true');
+ track.appendChild(draft);
+ createDrag={track,rect,day,dayIndex,anchorMinute,anchorLane,startX:e.clientX,startY:e.clientY,draft,start:anchorMinute,end:anchorMinute+state.interval,firstLane:anchorLane,lastLane:anchorLane};
+ e.preventDefault();
+ e.stopPropagation();
+ try{track.setPointerCapture(e.pointerId)}catch(_){ }
+ updateCreateDraft(e);
+}
+function finishCreateBookingDrag(e){
+ if(!createDrag)return false;
+ updateCreateDraft(e||{clientX:createDrag.startX,clientY:createDrag.startY});
+ const draftState=createDrag;
+ createDrag=null;
+ draftState.track.classList.remove('dragging');
+ draftState.draft.remove();
+ const id=uid();
+ const lanes=Array.from({length:draftState.lastLane-draftState.firstLane+1},(_,i)=>draftState.firstLane+i);
+ state.bookings.push({
+  id,
+  day:draftState.dayIndex,
+  start:timeStr(draftState.start),
+  end:timeStr(draftState.end),
+  activity:'New booking',
+  lanes,
+  coverageMode:'lanes',
+  sessionTypeId:'',
+  sessionTypeName:'Custom',
+  colourHex:'#b4c4d2'
+ });
+ selectedId=id;
+ suppressNextSheetClick=true;
+ saveAndRender();
+ showQuickTypeBar(id,{x:e?.clientX??draftState.startX,y:e?.clientY??draftState.startY});
+ setTimeout(()=>{suppressNextSheetClick=false},250);
+ return true;
+}
+
+const basePointerMoveForDirectEditor=onPointerMove;
+onPointerMove=function(e){
+ if(createDrag){e.preventDefault();updateCreateDraft(e);return}
+ return basePointerMoveForDirectEditor(e);
+};
+const basePointerEndForDirectEditor=endPointerDrag;
+endPointerDrag=function(e){
+ if(createDrag){finishCreateBookingDrag(e);return}
+ return basePointerEndForDirectEditor(e);
+};
+
+const baseRenderSheetForDirectEditor=renderSheet;
+renderSheet=function(){
+ const result=baseRenderSheetForDirectEditor();
+ document.querySelectorAll('.day-track[data-day]').forEach(track=>{
+  track.classList.add('booking-create-zone');
+  track.addEventListener('pointerdown',startCreateBookingDrag);
+ });
+ const sheet=$('sheet');
+ sheet.onclick=e=>{
+  if(suppressNextSheetClick){suppressNextSheetClick=false;return}
+  if(!e.target.closest('.booking-block'))deselectBooking();
+ };
+ return result;
+};
+
+const baseBindForDirectEditor=bind;
+bind=function(){
+ baseBindForDirectEditor();
+ $('projectNameInput').addEventListener('input',syncSettings);
+};
+
+
+/* Quick session-type choice after drawing a booking. */
+let quickTypeBookingId=null;
+
+function hideQuickTypeBar(){
+ quickTypeBookingId=null;
+ const bar=$('quickTypeBar');
+ if(bar)bar.hidden=true;
+}
+function quickTypeBooking(){
+ return state.bookings.find(booking=>booking.id===quickTypeBookingId)||null;
+}
+function renderQuickTypeActions(){
+ const actions=$('quickTypeActions');
+ if(!actions)return;
+ actions.innerHTML=state.sessionTypes.map(type=>`<button type="button" class="quick-type-button" data-quick-type="${escapeHtml(type.id)}"><span class="quick-type-swatch" style="background:${validHex(type.colour)}"></span>${escapeHtml(type.name)}</button>`).join('')+
+  '<button type="button" class="quick-type-button custom" data-quick-custom>Custom</button>'+
+  '<button type="button" class="quick-type-button undo" data-quick-undo>Undo</button>';
+ actions.querySelectorAll('[data-quick-type]').forEach(button=>button.addEventListener('click',()=>applyQuickType(button.dataset.quickType)));
+ actions.querySelector('[data-quick-custom]')?.addEventListener('click',keepQuickBookingCustom);
+ actions.querySelector('[data-quick-undo]')?.addEventListener('click',undoQuickBooking);
+}
+function showQuickTypeBar(id){
+ const booking=state.bookings.find(item=>item.id===id);
+ if(!booking)return;
+ quickTypeBookingId=id;
+ renderQuickTypeActions();
+ const bar=$('quickTypeBar');
+ if(bar){
+  bar.hidden=false;
+  bar.scrollIntoView({behavior:'smooth',block:'nearest'});
+ }
+}
+function applyQuickType(typeId){
+ const booking=quickTypeBooking(),type=sessionTypeById(typeId);
+ if(!booking||!type)return hideQuickTypeBar();
+ const id=booking.id;
+ hideQuickTypeBar();
+ updateBooking(id,{
+  activity:type.defaultTitle,
+  sessionTypeId:type.id,
+  sessionTypeName:type.name,
+  colourHex:validHex(type.colour)
+ });
+ selectedId=id;
+}
+function keepQuickBookingCustom(){
+ const booking=quickTypeBooking();
+ hideQuickTypeBar();
+ if(!booking)return;
+ selectedId=booking.id;
+ renderAll();
+ requestAnimationFrame(()=>{
+  const input=$('fineActivity');
+  if(input){input.focus();input.select()}
+ });
+}
+function undoQuickBooking(){
+ const booking=quickTypeBooking();
+ hideQuickTypeBar();
+ if(!booking)return;
+ state.bookings=state.bookings.filter(item=>item.id!==booking.id);
+ if(selectedId===booking.id)selectedId=null;
+ saveAndRender();
+}
+
+const selectBookingBeforeQuickType=selectBooking;
+selectBooking=function(id){
+ if(quickTypeBookingId&&quickTypeBookingId!==id)hideQuickTypeBar();
+ return selectBookingBeforeQuickType(id);
+};
+const showStartScreenBeforeQuickType=showStartScreen;
+showStartScreen=function(){hideQuickTypeBar();return showStartScreenBeforeQuickType()};
+
+/* Copy a selected booking and place it directly on the timetable. */
+let copiedBooking=null;
+let copyPreview=null;
+let copyPreviewTrack=null;
+let copyPlacement=null;
+
+function isEditingText(target){
+ return Boolean(target&&target.closest&&target.closest('input, textarea, select, [contenteditable="true"]'));
+}
+function clearCopyPreview(){
+ if(copyPreview){copyPreview.remove();copyPreview=null}
+ copyPreviewTrack=null;
+ copyPlacement=null;
+}
+function cancelCopyBooking(message='Copy cancelled'){
+ if(!copiedBooking)return;
+ copiedBooking=null;
+ clearCopyPreview();
+ document.body.classList.remove('copy-booking-mode');
+ if($('status'))$('status').textContent=message;
+}
+function beginCopyBooking(id=selectedId){
+ hideQuickTypeBar();
+ const source=state.bookings.find(booking=>booking.id===id);
+ if(!source){
+  if($('status'))$('status').textContent='Select a booking to copy';
+  return;
+ }
+ copiedBooking={...source,lanes:[...(source.lanes||[])]};
+ clearCopyPreview();
+ document.body.classList.add('copy-booking-mode');
+ if($('status'))$('status').textContent=`Copying ${source.activity} — click the timetable to place it`;
+}
+function copyPlacementAtPointer(track,clientX,clientY){
+ if(!copiedBooking)return null;
+ const dayIndex=Number(track.dataset.day),day=state.days[dayIndex];
+ if(!day)return null;
+ const rect=track.getBoundingClientRect();
+ const duration=Math.max(state.interval,mins(copiedBooking.end)-mins(copiedBooking.start));
+ const open=mins(day.open),close=mins(day.close);
+ if(duration>close-open)return {valid:false,dayIndex,rect,day};
+ let start=minuteAtPointer(clientX,rect,day);
+ start=clamp(start,open,close-duration);
+ const end=start+duration;
+ const mode=coverageMode(copiedBooking);
+ let lanes;
+ if(mode==='lanes'){
+  const span=clamp((copiedBooking.lanes||[]).length||1,1,state.laneCount);
+  const pointedLane=laneAtPointer(clientY,rect);
+  const firstLane=clamp(pointedLane,1,state.laneCount-span+1);
+  lanes=Array.from({length:span},(_,index)=>firstLane+index);
+ }else{
+  lanes=Array.from({length:state.laneCount},(_,index)=>index+1);
+ }
+ return {valid:true,dayIndex,day,rect,start,end,lanes,mode};
+}
+function showCopyPreview(track,event){
+ if(!copiedBooking)return;
+ const placement=copyPlacementAtPointer(track,event.clientX,event.clientY);
+ if(!placement)return;
+ if(copyPreviewTrack!==track){
+  clearCopyPreview();
+  copyPreview=document.createElement('div');
+  copyPreview.className='booking-copy-preview';
+  copyPreview.setAttribute('aria-hidden','true');
+  track.appendChild(copyPreview);
+  copyPreviewTrack=track;
+ }
+ copyPlacement=placement;
+ if(!placement.valid){
+  copyPreview.classList.add('invalid');
+  copyPreview.style.cssText='left:0;right:0;top:0;height:100%;';
+  copyPreview.textContent='Does not fit within these opening hours';
+  return;
+ }
+ const viewStart=mins(state.viewStart),range=Math.max(state.interval,mins(state.viewEnd)-viewStart);
+ const left=(placement.start-viewStart)/range*100;
+ const width=(placement.end-placement.start)/range*100;
+ const previewBooking={...copiedBooking,day:placement.dayIndex,start:timeStr(placement.start),end:timeStr(placement.end),lanes:placement.lanes};
+ const [top,bottom]=coverageBounds(previewBooking);
+ const colour=bookingColour(copiedBooking);
+ copyPreview.classList.remove('invalid');
+ copyPreview.style.left=`${left}%`;
+ copyPreview.style.width=`${width}%`;
+ copyPreview.style.top=`${top}%`;
+ copyPreview.style.height=`${bottom-top}%`;
+ copyPreview.style.backgroundColor=colour;
+ copyPreview.style.color=textColour(colour);
+ copyPreview.textContent=copiedBooking.activity;
+}
+function placeCopiedBooking(track,event){
+ if(!copiedBooking)return false;
+ const placement=copyPlacementAtPointer(track,event.clientX,event.clientY);
+ if(!placement?.valid){
+  if($('status'))$('status').textContent='That booking does not fit within this day’s opening hours';
+  return true;
+ }
+ const newId=uid();
+ const duplicate={
+  ...copiedBooking,
+  id:newId,
+  day:placement.dayIndex,
+  start:timeStr(placement.start),
+  end:timeStr(placement.end),
+  lanes:[...placement.lanes]
+ };
+ state.bookings.push(duplicate);
+ selectedId=newId;
+ copiedBooking=null;
+ clearCopyPreview();
+ document.body.classList.remove('copy-booking-mode');
+ suppressNextSheetClick=true;
+ saveAndRender();
+ if($('status'))$('status').textContent=`Copied ${duplicate.activity}`;
+ setTimeout(()=>{suppressNextSheetClick=false},250);
+ return true;
+}
+function bindCopyPlacementTargets(){
+ document.querySelectorAll('.day-track[data-day]').forEach(track=>{
+  track.addEventListener('pointermove',event=>showCopyPreview(track,event));
+  track.addEventListener('pointerleave',()=>{
+   if(copyPreviewTrack===track)clearCopyPreview();
+  });
+  track.addEventListener('pointerdown',event=>{
+   if(!copiedBooking||event.button!==0)return;
+   event.preventDefault();
+   event.stopPropagation();
+   event.stopImmediatePropagation();
+   placeCopiedBooking(track,event);
+  },true);
+ });
+}
+
+const renderSheetBeforeCopyPlacement=renderSheet;
+renderSheet=function(){
+ const result=renderSheetBeforeCopyPlacement();
+ bindCopyPlacementTargets();
+ return result;
+};
+
+const bindBeforeCopyShortcut=bind;
+bind=function(){
+ bindBeforeCopyShortcut();
+ document.addEventListener('keydown',event=>{
+  if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='c'&&!isEditingText(event.target)){
+   event.preventDefault();
+   beginCopyBooking();
+   return;
+  }
+  if(event.key==='Escape'&&copiedBooking){
+   event.preventDefault();
+   cancelCopyBooking();
+   return;
+  }
+  if(event.key==='Escape'&&quickTypeBookingId){
+   event.preventDefault();
+   hideQuickTypeBar();
+  }
+ });
+};
+
+
+/* Refined editor: history, multi-selection, overlaps, context menus and file state. */
+const FILE_RECORDS_KEY='timetableCreatorFileRecordsV1';
+const HISTORY_LIMIT=80;
+let selectedIds=new Set(selectedId?[selectedId]:[]);
+let undoStack=[];
+let redoStack=[];
+let historyCurrentFull='';
+let historyCurrentKey='';
+let historyProjectId='';
+let historyApplying=false;
+let preserveMultiSelectionForId=null;
+let pendingDeleteIds=[];
+let quickTypePoint=null;
+let contextBookingId=null;
+let fileRecords={};
+try{fileRecords=JSON.parse(localStorage.getItem(FILE_RECORDS_KEY)||'{}')||{}}catch(_){fileRecords={}}
+
+function cloneState(value=state){return JSON.parse(JSON.stringify(value))}
+function historyKey(value=state){
+ const copy=cloneState(value);
+ delete copy.updatedAt;
+ return JSON.stringify(copy);
+}
+function stateFull(value=state){return JSON.stringify(cloneState(value))}
+function hashString(value){
+ let hash=2166136261;
+ for(let index=0;index<value.length;index++){
+  hash^=value.charCodeAt(index);
+  hash=Math.imul(hash,16777619);
+ }
+ return (hash>>>0).toString(36);
+}
+function projectFingerprint(value=state){return hashString(historyKey(value))}
+function persistFileRecords(){try{localStorage.setItem(FILE_RECORDS_KEY,JSON.stringify(fileRecords))}catch(_){}}
+function markCurrentProjectSaved(filename='Timetable file'){
+ if(!state?.projectId)return;
+ fileRecords[state.projectId]={fingerprint:projectFingerprint(),filename,at:new Date().toISOString()};
+ persistFileRecords();
+ updateFileStateIndicator();
+}
+function updateFileStateIndicator(){
+ const badge=$('fileState'),label=$('fileStateText');
+ if(!badge||!label||!state?.projectId)return;
+ const record=fileRecords[state.projectId];
+ const saved=Boolean(record&&record.fingerprint===projectFingerprint());
+ badge.classList.toggle('saved',saved);
+ badge.classList.toggle('dirty',!saved);
+ label.textContent=saved?'Saved to file':record?'Changes not saved':'Not saved to file';
+ badge.title=saved?`Matches ${record.filename||'the last saved timetable file'}. Browser autosave is also active.`:'Browser autosave is active, but these changes are not in the last timetable file you saved.';
+}
+function resetHistory(){
+ undoStack=[];redoStack=[];
+ historyProjectId=state?.projectId||'';
+ historyCurrentFull=stateFull();
+ historyCurrentKey=historyKey();
+ updateHistoryButtons();
+}
+function updateHistoryButtons(){
+ if($('undoBtn'))$('undoBtn').disabled=!undoStack.length;
+ if($('redoBtn'))$('redoBtn').disabled=!redoStack.length;
+}
+function commitHistoryBeforeSave(){
+ const projectId=state?.projectId||'';
+ const nextKey=historyKey();
+ if(!historyCurrentFull||historyProjectId!==projectId){
+  historyProjectId=projectId;historyCurrentFull=stateFull();historyCurrentKey=nextKey;undoStack=[];redoStack=[];return;
+ }
+ if(nextKey!==historyCurrentKey){
+  undoStack.push(historyCurrentFull);
+  if(undoStack.length>HISTORY_LIMIT)undoStack.shift();
+  redoStack=[];
+ }
+}
+function finishHistorySave(){
+ historyProjectId=state?.projectId||'';
+ historyCurrentFull=stateFull();
+ historyCurrentKey=historyKey();
+ updateHistoryButtons();
+ updateFileStateIndicator();
+}
+function restoreHistorySnapshot(snapshot){
+ historyApplying=true;
+ hideBookingContextMenu();hideQuickTypeBar();
+ if(copiedBooking)cancelCopyBooking('Copy cancelled');
+ state=JSON.parse(snapshot);
+ autoFitView();
+ selectedId=null;selectedIds.clear();editId=null;
+ syncInputs();renderLanePicker();resetForm();
+ saveAndRender();
+ historyApplying=false;
+ historyCurrentFull=stateFull();historyCurrentKey=historyKey();historyProjectId=state.projectId||'';
+ updateHistoryButtons();updateFileStateIndicator();
+}
+function undoEdit(){
+ if(!undoStack.length)return;
+ const previous=undoStack.pop();
+ redoStack.push(historyCurrentFull||stateFull());
+ restoreHistorySnapshot(previous);
+}
+function redoEdit(){
+ if(!redoStack.length)return;
+ const next=redoStack.pop();
+ undoStack.push(historyCurrentFull||stateFull());
+ restoreHistorySnapshot(next);
+}
+
+const saveAndRenderBeforeProfessionalEditor=saveAndRender;
+saveAndRender=function(){
+ if(!historyApplying)commitHistoryBeforeSave();
+ saveAndRenderBeforeProfessionalEditor();
+ finishHistorySave();
+};
+
+function selectionArray(){return [...selectedIds].map(id=>state.bookings.find(b=>b.id===id)).filter(Boolean)}
+function setSingleSelection(id,render=true){
+ selectedIds.clear();
+ if(id){selectedIds.add(id);selectedId=id}else selectedId=null;
+ if(render)renderAll();
+}
+function toggleBookingSelection(id){
+ hideBookingContextMenu();hideQuickTypeBar();
+ if(selectedIds.has(id)){
+  selectedIds.delete(id);
+  if(selectedId===id)selectedId=[...selectedIds][0]||null;
+ }else{
+  selectedIds.add(id);selectedId=id;
+ }
+ renderAll();
+}
+function clearBookingSelection(render=true){selectedIds.clear();selectedId=null;if(render)renderAll()}
+
+const selectBookingBeforeMultiSelect=selectBooking;
+selectBooking=function(id){
+ if(preserveMultiSelectionForId===id&&selectedIds.has(id)){
+  preserveMultiSelectionForId=null;selectedId=id;renderAll();return;
+ }
+ setSingleSelection(id,false);
+ return selectBookingBeforeMultiSelect(id);
+};
+const deselectBookingBeforeMultiSelect=deselectBooking;
+deselectBooking=function(){selectedIds.clear();return deselectBookingBeforeMultiSelect()};
+const prepareForPrintBeforeMultiSelect=prepareForPrint;
+prepareForPrint=function(){selectedIds.clear();hideBookingContextMenu();hideQuickTypeBar();return prepareForPrintBeforeMultiSelect()};
+
+function coverageInterval(booking){const bounds=coverageBounds(booking);return {start:bounds[0],end:bounds[1]}}
+function bookingsOverlap(first,second){
+ if(!first||!second||first.id===second.id||Number(first.day)!==Number(second.day))return false;
+ if(mins(first.start)>=mins(second.end)||mins(second.start)>=mins(first.end))return false;
+ const a=coverageInterval(first),b=coverageInterval(second);
+ return a.start<b.end&&b.start<a.end;
+}
+function conflictMap(){
+ const map=new Map(state.bookings.map(b=>[b.id,new Set()]));
+ for(let i=0;i<state.bookings.length;i++)for(let j=i+1;j<state.bookings.length;j++){
+  const a=state.bookings[i],b=state.bookings[j];
+  if(bookingsOverlap(a,b)){map.get(a.id).add(b.id);map.get(b.id).add(a.id)}
+ }
+ return map;
+}
+function updateOverlapIndicator(map=conflictMap()){
+ const ids=[...map.entries()].filter(([,others])=>others.size).map(([id])=>id);
+ const pairCount=[...map.values()].reduce((sum,set)=>sum+set.size,0)/2;
+ const badge=$('overlapState');if(!badge)return;
+ badge.hidden=!pairCount;
+ badge.textContent=pairCount?`${pairCount} overlap${pairCount===1?'':'s'}`:'';
+ badge.title=pairCount?`${ids.length} bookings are involved in ${pairCount} overlap${pairCount===1?'':'s'}. Overlaps are warnings only.`:'';
+}
+function applySelectionAndConflictStyles(){
+ const conflicts=conflictMap();
+ document.querySelectorAll('.booking-block[data-booking-id]').forEach(block=>{
+  const id=block.dataset.bookingId;
+  block.classList.toggle('multi-selected',selectedIds.has(id));
+  const others=conflicts.get(id)||new Set();
+  block.classList.toggle('booking-conflict',others.size>0);
+  if(others.size){
+   const names=[...others].map(otherId=>state.bookings.find(b=>b.id===otherId)?.activity).filter(Boolean);
+   block.title=`${block.title||''}\nWarning: overlaps ${names.join(', ')}`.trim();
+  }
+ });
+ updateOverlapIndicator(conflicts);
+ return conflicts;
+}
+
+function appendSingleOverlapWarning(booking){
+ const body=$('selectionBody');if(!body||!booking)return;
+ const conflicts=state.bookings.filter(other=>bookingsOverlap(booking,other));
+ if(!conflicts.length)return;
+ const box=document.createElement('div');box.className='overlap-warning';
+ box.innerHTML=`<strong>Overlap warning</strong>This booking overlaps ${conflicts.length===1?escapeHtml(conflicts[0].activity):`${conflicts.length} other bookings`} in the same pool area and time.`;
+ body.prepend(box);
+}
+function renderMultiSelectionPanel(bookings){
+ const body=$('selectionBody'),badge=$('selectionBadge');
+ badge.textContent=`${bookings.length} selected`;
+ const selectedConflictCount=bookings.filter(booking=>state.bookings.some(other=>bookingsOverlap(booking,other))).length;
+ body.innerHTML=`
+  ${selectedConflictCount?`<div class="overlap-warning"><strong>Overlap warning</strong>${selectedConflictCount} selected booking${selectedConflictCount===1?' is':'s are'} involved in an overlap.</div>`:''}
+  <div class="multi-selection-summary"><strong>${bookings.length} bookings selected.</strong><br>Drag any selected booking to move the group together. Shift-click or Ctrl-click bookings to add or remove them.</div>
+  <div class="field"><label for="bulkSessionType">Change session type</label><select id="bulkSessionType"><option value="">Choose a session type…</option>${state.sessionTypes.map(type=>`<option value="${escapeHtml(type.id)}">${escapeHtml(type.name)}</option>`).join('')}</select></div>
+  <label class="bulk-check"><input id="bulkUseTitle" type="checkbox" checked> Use the session type’s default title</label>
+  <label class="bulk-check"><input id="bulkUseColour" type="checkbox" checked> Use the session type’s colour</label>
+  <div class="form-actions"><button id="bulkApplyType" type="button">Apply to selection</button><button id="bulkCopyPrimary" type="button" class="secondary">Copy primary</button><button id="bulkClear" type="button" class="secondary">Clear selection</button><button id="bulkDelete" type="button" class="danger">Delete selection</button></div>
+  <div class="multi-help">Only moving is grouped. Resize handles continue to adjust the primary booking so accidental bulk resizing is avoided.</div>`;
+ $('bulkApplyType').addEventListener('click',()=>{
+  const type=sessionTypeById($('bulkSessionType').value);if(!type)return alert('Choose a session type first.');
+  const useTitle=$('bulkUseTitle').checked,useColour=$('bulkUseColour').checked,ids=new Set(selectedIds);
+  state.bookings=state.bookings.map(booking=>ids.has(booking.id)?{...booking,sessionTypeId:type.id,sessionTypeName:type.name,activity:useTitle?type.defaultTitle:booking.activity,colourHex:useColour?validHex(type.colour):booking.colourHex}:booking);
+  saveAndRender();
+ });
+ $('bulkCopyPrimary').addEventListener('click',()=>beginCopyBooking(selectedId));
+ $('bulkClear').addEventListener('click',()=>clearBookingSelection());
+ $('bulkDelete').addEventListener('click',()=>requestDeleteBooking(selectedId));
+}
+const renderSelectionPanelBeforeMultiSelect=renderSelectionPanel;
+renderSelectionPanel=function(){
+ const bookings=selectionArray();
+ if(bookings.length>1){renderMultiSelectionPanel(bookings);return}
+ renderSelectionPanelBeforeMultiSelect();
+ if(bookings.length===1)appendSingleOverlapWarning(bookings[0]);
+};
+
+function clampFloatingMenu(menu,x,y){
+ if(!menu)return;
+ const margin=10,offset=10;
+ menu.style.left=`${Math.max(margin,x+offset)}px`;menu.style.top=`${Math.max(margin,y+offset)}px`;
+ requestAnimationFrame(()=>{
+  const rect=menu.getBoundingClientRect();
+  const left=clamp(x+offset,margin,Math.max(margin,window.innerWidth-rect.width-margin));
+  const preferredTop=y+offset;
+  const top=preferredTop+rect.height<=window.innerHeight-margin?preferredTop:Math.max(margin,y-rect.height-offset);
+  menu.style.left=`${left}px`;menu.style.top=`${clamp(top,margin,Math.max(margin,window.innerHeight-rect.height-margin))}px`;
+ });
+}
+const hideQuickTypeBarBeforeFloating=hideQuickTypeBar;
+hideQuickTypeBar=function(){quickTypePoint=null;return hideQuickTypeBarBeforeFloating()};
+showQuickTypeBar=function(id,point){
+ const booking=state.bookings.find(item=>item.id===id);if(!booking)return;
+ quickTypeBookingId=id;quickTypePoint=point||quickTypePoint||{x:window.innerWidth/2,y:window.innerHeight/2};
+ selectedIds.clear();selectedIds.add(id);selectedId=id;
+ renderQuickTypeActions();
+ const menu=$('quickTypeBar');if(!menu)return;
+ menu.hidden=false;clampFloatingMenu(menu,quickTypePoint.x,quickTypePoint.y);
+};
+
+function hideBookingContextMenu(){const menu=$('bookingContextMenu');if(menu)menu.hidden=true;contextBookingId=null;document.body.classList.remove('context-menu-open')}
+function applyTypeToSelection(typeId){
+ const type=sessionTypeById(typeId);if(!type)return;
+ const ids=new Set(selectedIds);
+ state.bookings=state.bookings.map(booking=>ids.has(booking.id)?{...booking,sessionTypeId:type.id,sessionTypeName:type.name,activity:type.defaultTitle,colourHex:validHex(type.colour)}:booking);
+ hideBookingContextMenu();saveAndRender();
+}
+function showBookingContextMenu(event,id){
+ event.preventDefault();event.stopPropagation();
+ hideQuickTypeBar();
+ if(!selectedIds.has(id))setSingleSelection(id,false);
+ selectedId=id;contextBookingId=id;renderAll();
+ const booking=state.bookings.find(item=>item.id===id),count=selectedIds.size,menu=$('bookingContextMenu');if(!booking||!menu)return;
+ const title=count>1?`${count} selected`:booking.activity;
+ menu.innerHTML=`<div class="context-menu-title">${escapeHtml(title)}</div>
+  <button class="context-menu-item" data-menu-copy type="button"><span class="menu-icon">⧉</span>${count>1?'Copy primary booking':'Copy booking'}</button>
+  ${count>1?'<button class="context-menu-item" data-menu-only type="button"><span class="menu-icon">●</span>Keep only this booking selected</button>':'<button class="context-menu-item" data-menu-add type="button"><span class="menu-icon">＋</span>Add another with Shift-click</button>'}
+  <div class="context-menu-divider"></div>
+  <div class="context-menu-title">Change session type</div>
+  ${state.sessionTypes.map(type=>`<button class="context-menu-item context-menu-type" data-menu-type="${escapeHtml(type.id)}" type="button"><span class="context-menu-swatch" style="background:${validHex(type.colour)}"></span>${escapeHtml(type.name)}</button>`).join('')}
+  <div class="context-menu-divider"></div>
+  <button class="context-menu-item danger" data-menu-delete type="button"><span class="menu-icon">⌫</span>${count>1?'Delete selection':'Delete booking'}</button>`;
+ menu.querySelector('[data-menu-copy]').addEventListener('click',()=>{hideBookingContextMenu();beginCopyBooking(id)});
+ menu.querySelector('[data-menu-only]')?.addEventListener('click',()=>{hideBookingContextMenu();setSingleSelection(id)});
+ menu.querySelector('[data-menu-add]')?.addEventListener('click',()=>hideBookingContextMenu());
+ menu.querySelectorAll('[data-menu-type]').forEach(button=>button.addEventListener('click',()=>applyTypeToSelection(button.dataset.menuType)));
+ menu.querySelector('[data-menu-delete]').addEventListener('click',()=>{hideBookingContextMenu();requestDeleteBooking(id)});
+ menu.hidden=false;document.body.classList.add('context-menu-open');clampFloatingMenu(menu,event.clientX,event.clientY);
+}
+function bindProfessionalSheetInteractions(){
+ const sheet=$('sheet');if(!sheet)return;
+ sheet.addEventListener('pointerdown',event=>{
+  const block=event.target.closest('.booking-block[data-booking-id]');if(!block)return;
+  const id=block.dataset.bookingId;
+  if(event.shiftKey||event.ctrlKey||event.metaKey){
+   event.preventDefault();event.stopImmediatePropagation();toggleBookingSelection(id);return;
+  }
+  if(selectedIds.size>1&&selectedIds.has(id))preserveMultiSelectionForId=id;
+  else if(!selectedIds.has(id)){selectedIds.clear();selectedIds.add(id);selectedId=id}
+ },true);
+ sheet.addEventListener('contextmenu',event=>{
+  const block=event.target.closest('.booking-block[data-booking-id]');
+  if(block)showBookingContextMenu(event,block.dataset.bookingId);else hideBookingContextMenu();
+ });
+}
+
+const startPointerDragBeforeGroupMove=startPointerDrag;
+startPointerDrag=function(event){
+ const block=event.currentTarget,id=block?.dataset.bookingId,mode=event.target.dataset.mode||'move';
+ if(mode==='move'&&id&&selectedIds.size>1&&selectedIds.has(id)){
+  const track=block.closest('.day-track'),rect=track.getBoundingClientRect();
+  event.preventDefault();selectedId=id;
+  drag={multi:true,id,mode:'move',startX:event.clientX,startY:event.clientY,rect,lastStepX:0,lastStepY:0,originals:selectionArray().map(booking=>({...booking,lanes:[...(booking.lanes||[])]}))};
+  try{block.setPointerCapture(event.pointerId)}catch(_){ }
+  track.classList.add('dragging');renderSelectionPanel();return;
+ }
+ return startPointerDragBeforeGroupMove(event);
+};
+const onPointerMoveBeforeGroupMove=onPointerMove;
+onPointerMove=function(event){
+ if(!drag?.multi)return onPointerMoveBeforeGroupMove(event);
+ event.preventDefault();
+ const viewRange=mins(state.viewEnd)-mins(state.viewStart),dx=event.clientX-drag.startX,dy=event.clientY-drag.startY;
+ let timeSteps=Math.round((dx/drag.rect.width*viewRange)/SNAP),laneSteps=Math.round(dy/(drag.rect.height/state.laneCount));
+ if(timeSteps===drag.lastStepX&&laneSteps===drag.lastStepY)return;
+ const originals=drag.originals;
+ const minTimeDelta=Math.max(...originals.map(booking=>mins(state.days[booking.day].open)-mins(booking.start)));
+ const maxTimeDelta=Math.min(...originals.map(booking=>mins(state.days[booking.day].close)-mins(booking.end)));
+ let timeDelta=clamp(timeSteps*SNAP,minTimeDelta,maxTimeDelta);
+ timeDelta=Math.round(timeDelta/SNAP)*SNAP;
+ const laneBookings=originals.filter(booking=>coverageMode(booking)==='lanes');
+ if(laneBookings.length){
+  const minLaneDelta=Math.max(...laneBookings.map(booking=>1-(booking.lanes[0]||1)));
+  const maxLaneDelta=Math.min(...laneBookings.map(booking=>state.laneCount-(booking.lanes[booking.lanes.length-1]||state.laneCount)));
+  laneSteps=clamp(laneSteps,minLaneDelta,maxLaneDelta);
+ }else laneSteps=0;
+ drag.lastStepX=timeSteps;drag.lastStepY=Math.round(dy/(drag.rect.height/state.laneCount));
+ const originalMap=new Map(originals.map(booking=>[booking.id,booking]));
+ state.bookings=state.bookings.map(booking=>{
+  const original=originalMap.get(booking.id);if(!original)return booking;
+  const moved={...booking,start:timeStr(mins(original.start)+timeDelta),end:timeStr(mins(original.end)+timeDelta)};
+  if(coverageMode(original)==='lanes')moved.lanes=original.lanes.map(lane=>lane+laneSteps);
+  return moved;
+ });
+ renderAll();
+};
+const endPointerDragBeforeGroupMove=endPointerDrag;
+endPointerDrag=function(event){
+ if(!drag?.multi)return endPointerDragBeforeGroupMove(event);
+ document.querySelectorAll('.day-track.dragging').forEach(track=>track.classList.remove('dragging'));
+ drag=null;preserveMultiSelectionForId=selectedId;saveAndRender();
+};
+
+requestDeleteBooking=function(id){
+ if(!id)return;
+ pendingDeleteIds=selectedIds.size>1&&selectedIds.has(id)?[...selectedIds]:[id];
+ const bookings=pendingDeleteIds.map(itemId=>state.bookings.find(booking=>booking.id===itemId)).filter(Boolean);if(!bookings.length)return;
+ $('deleteConfirmTitle').textContent=bookings.length>1?`Delete ${bookings.length} bookings?`:`Delete ${bookings[0].activity}?`;
+ $('deleteConfirmText').textContent=bookings.length>1?'The selected bookings will be permanently removed from the timetable.':`${state.days[bookings[0].day].name} · ${bookings[0].start}–${bookings[0].end} will be permanently removed from the timetable.`;
+ $('deleteConfirmOverlay').classList.add('open');setTimeout(()=>$('cancelDeleteBtn').focus(),0);
+};
+closeDeleteConfirm=function(){pendingDeleteIds=[];pendingDeleteId=null;$('deleteConfirmOverlay').classList.remove('open')};
+confirmDeleteBooking=function(){
+ if(!pendingDeleteIds.length)return closeDeleteConfirm();
+ const removeIds=new Set(pendingDeleteIds);
+ state.bookings=state.bookings.filter(booking=>!removeIds.has(booking.id));
+ selectedIds=new Set([...selectedIds].filter(id=>!removeIds.has(id)));
+ if(selectedId&&removeIds.has(selectedId))selectedId=[...selectedIds][0]||null;
+ if(editId&&removeIds.has(editId))resetForm();
+ closeDeleteConfirm();saveAndRender();
+};
+
+const handleFileBeforeFileIndicator=handleFile;
+handleFile=function(file,input){
+ if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>{
+  try{
+   const data=JSON.parse(reader.result),isV2=data&&data.format===FILE_FORMAT&&Number(data.formatVersion)>=2;
+   if(!isV2&&!Array.isArray(data.bookings))throw new Error('Unrecognised timetable structure');
+   normalizeState(data);selectedId=null;selectedIds.clear();editId=null;populateCentreSelect();syncInputs();renderLanePicker();resetForm();
+   historyApplying=true;saveAndRender();historyApplying=false;resetHistory();markCurrentProjectSaved(file.name);showWorkspace();showImportNotice(file.name);
+  }catch(error){console.error(error);alert('That file is not a recognised timetable file.')}
+ };
+ reader.readAsText(file);if(input)input.value='';
+};
+
+downloadJson=async function(){
+ const exportData=toV2File(state),data=JSON.stringify(exportData,null,2),blob=new Blob([data],{type:'application/json'}),suggestedName=suggestedTimetableFilename();
+ try{
+  if('showSaveFilePicker' in window){
+   const handle=await window.showSaveFilePicker({suggestedName,types:[{description:'Timetable file',accept:{'application/json':['.json']}}]});
+   const writable=await handle.createWritable();await writable.write(blob);await writable.close();markCurrentProjectSaved(handle.name);return;
+  }
+ }catch(error){if(error?.name==='AbortError')return;console.warn('Using browser download fallback',error)}
+ let filename=prompt('Name this timetable file:',suggestedName);if(filename===null)return;
+ filename=safeFilenamePart(filename)||suggestedName;if(!filename.toLowerCase().endsWith('.json'))filename+='.json';
+ const url=URL.createObjectURL(blob),anchor=document.createElement('a');anchor.href=url;anchor.download=filename;document.body.appendChild(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);markCurrentProjectSaved(filename);
+};
+
+const completeWizardBeforeFileIndicator=completeWizard;
+completeWizard=function(){completeWizardBeforeFileIndicator();selectedIds.clear();resetHistory();updateFileStateIndicator()};
+
+const renderSheetBeforeProfessionalEditor=renderSheet;
+renderSheet=function(){
+ const result=renderSheetBeforeProfessionalEditor();
+ applySelectionAndConflictStyles();bindProfessionalSheetInteractions();
+ return result;
+};
+
+const bindBeforeProfessionalEditor=bind;
+bind=function(){
+ bindBeforeProfessionalEditor();
+ $('undoBtn')?.addEventListener('click',undoEdit);$('redoBtn')?.addEventListener('click',redoEdit);
+ document.addEventListener('pointerdown',event=>{
+  if(!event.target.closest('#bookingContextMenu'))hideBookingContextMenu();
+  if(quickTypeBookingId&&!event.target.closest('#quickTypeBar')&&!event.target.closest('.booking-block[data-booking-id]'))hideQuickTypeBar();
+ },true);
+ document.addEventListener('keydown',event=>{
+  if(isEditingText(event.target))return;
+  const modifier=event.ctrlKey||event.metaKey;
+  if(modifier&&event.key.toLowerCase()==='z'){
+   event.preventDefault();event.stopImmediatePropagation();event.shiftKey?redoEdit():undoEdit();return;
+  }
+  if(modifier&&event.key.toLowerCase()==='y'){
+   event.preventDefault();event.stopImmediatePropagation();redoEdit();return;
+  }
+  if(event.key==='Delete'&&selectedIds.size>1){event.preventDefault();event.stopImmediatePropagation();requestDeleteBooking(selectedId);return}
+  if(event.key==='Escape'&&!$('bookingContextMenu')?.hidden){event.preventDefault();hideBookingContextMenu()}
+ },true);
+ window.addEventListener('resize',()=>{hideBookingContextMenu();if(quickTypeBookingId&&quickTypePoint)clampFloatingMenu($('quickTypeBar'),quickTypePoint.x,quickTypePoint.y)});
+};
+
+
+
+const THEME_STORAGE_KEY='timetableCreatorTheme';
+function applyAppTheme(theme,{persist=true}={}){
+ const isDark=theme==='dark';
+ document.documentElement.dataset.theme=isDark?'dark':'light';
+ const toggle=$('themeToggle');
+ if(toggle){
+  toggle.setAttribute('aria-checked',String(isDark));
+  toggle.setAttribute('aria-label',isDark?'Use light mode':'Use dark mode');
+  toggle.title=isDark?'Use light mode':'Use dark mode';
+ }
+ if(persist){try{localStorage.setItem(THEME_STORAGE_KEY,isDark?'dark':'light')}catch(_){} }
+}
+function initThemeToggle(){
+ let saved='light';
+ try{saved=localStorage.getItem(THEME_STORAGE_KEY)==='dark'?'dark':'light'}catch(_){}
+ applyAppTheme(saved,{persist:false});
+ $('themeToggle')?.addEventListener('click',()=>applyAppTheme(document.documentElement.dataset.theme==='dark'?'light':'dark'));
+}
+
+const initBeforeProfessionalEditor=init;
+init=function(){
+ initBeforeProfessionalEditor();
+ initThemeToggle();
+ if(selectedId)selectedIds.add(selectedId);
+ resetHistory();updateFileStateIndicator();applySelectionAndConflictStyles();
+};
+
 init();
 </script>
 </body>
