@@ -94,12 +94,12 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .corner,.day-label{border-right:2px solid var(--navy)}
 .corner{background:var(--navy);color:white;padding:8px 6px;font-size:12px;font-weight:700}
 .time-track{position:relative;height:34px;background:#edf3f7;border-bottom:2px solid var(--navy);overflow:hidden}
-.time-label{position:absolute;top:0;z-index:3;height:100%;font-size:10px;padding:4px 3px 0;color:#324553;white-space:nowrap;pointer-events:none}
-.time-label.start{left:0;text-align:left}
-.time-label.end{left:auto;right:0;text-align:right}
+.time-label{position:absolute;top:0;z-index:3;width:42px;height:18px;transform:translateX(-50%);display:flex;align-items:flex-start;justify-content:center;font-size:10px;padding-top:4px;color:#324553;white-space:nowrap;text-align:center;pointer-events:none}
+.time-label.start{left:0;transform:none;justify-content:flex-start;text-align:left}
+.time-label.end{left:100%;right:auto;transform:translateX(-100%);justify-content:flex-end;text-align:right}
 .slot-line{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed rgba(96,116,132,.25);pointer-events:none;z-index:0}
 .slot-line.major{border-left-style:solid;border-left-color:rgba(61,84,102,.42)}
-.time-track .slot-line{border-left-style:solid;border-left-color:rgba(87,108,124,.34);z-index:1}
+.time-track .slot-line{top:18px;border-left-style:solid;border-left-color:rgba(87,108,124,.34);z-index:1}
 .day-row{min-height:74px;border-bottom:1px solid var(--navy)}
 .day-row:last-child{border-bottom:0}
 .day-label{background:#e9f0f5;padding:8px 7px;display:flex;flex-direction:column;justify-content:center;font-weight:800;color:var(--navy);font-size:13px}
@@ -110,7 +110,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .booking-block{position:absolute;border:1px solid rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:10px;line-height:1.1;padding:2px;min-width:2px;cursor:grab;user-select:none;touch-action:none;z-index:2}
 .booking-block:active{cursor:grabbing}
 .booking-block.selected{outline:3px solid var(--navy);outline-offset:1px;z-index:8;overflow:visible}
-.booking-content{position:relative;z-index:3;pointer-events:none;overflow:hidden;width:100%}.booking-block.selected .booking-content{padding-right:26px}
+.booking-content{position:relative;z-index:3;pointer-events:none;display:flex;align-items:center;justify-content:center;width:100%;height:100%;max-height:100%;min-height:0;overflow:hidden;white-space:normal;overflow-wrap:normal;word-break:normal;hyphens:none;text-wrap:balance}.booking-block.selected .booking-content{padding-right:26px}
+.booking-block.label-truncated .booking-content{letter-spacing:-.08px}
 .booking-grid-line{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed rgba(20,49,72,.18);pointer-events:none;z-index:2}
 .booking-grid-line.major{border-left-style:solid;border-left-color:rgba(20,49,72,.3)}
 .drag-handle{position:absolute;z-index:10;background:var(--navy);border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.35)}
@@ -375,8 +376,10 @@ body.copy-booking-mode::after{
 .file-state.saved{border-color:#9bc6aa;background:#edf8f1;color:#28613c}
 .file-state-dot{width:8px;height:8px;border-radius:50%;background:#d69420;box-shadow:0 0 0 3px rgba(214,148,32,.13)}
 .file-state.saved .file-state-dot{background:#3b9361;box-shadow:0 0 0 3px rgba(59,147,97,.13)}
-.overlap-state{border:1px solid #e0ae79;background:#fff1e3;color:#8a4919}
-.overlap-state::before{content:'!';display:grid;place-items:center;width:17px;height:17px;border-radius:50%;background:#d97829;color:white;font-size:11px}
+.overlap-state{border:1px solid #c7d0d6;background:#eef2f4;color:#5c6b75}
+.overlap-state::before{content:'✓';display:grid;place-items:center;width:17px;height:17px;border-radius:50%;background:#8998a2;color:white;font-size:11px}
+.overlap-state.has-overlaps{border-color:#e0ae79;background:#fff1e3;color:#8a4919}
+.overlap-state.has-overlaps::before{content:'!';background:#d97829}
 .floating-menu{position:fixed!important;z-index:1600;width:min(310px,calc(100vw - 24px));max-height:min(520px,calc(100vh - 24px));overflow:auto;border:1px solid #b9c8d2;border-radius:12px;background:#fff;box-shadow:0 18px 48px rgba(13,37,55,.25);padding:8px}
 .quick-type-bar{display:block;left:12px;top:12px;background:#fff;border-bottom:0;transform-origin:top left;animation:menu-pop .12s ease-out}
 .quick-type-bar[hidden],.booking-context-menu[hidden]{display:none!important}
@@ -489,7 +492,10 @@ html[data-theme="dark"] .sheet{background:#fff;color:#17212b;box-shadow:0 4px 22
 html[data-theme="dark"] .file-state{background:#1b2831;border-color:#41545f;color:#cbd9e1}
 html[data-theme="dark"] .file-state.dirty{background:#33291b;border-color:#6e5a37;color:#f0d79c}
 html[data-theme="dark"] .file-state.saved{background:#173025;border-color:#365f4a;color:#b9dfca}
-html[data-theme="dark"] .overlap-state{background:#3a2519;border-color:#86512e;color:#f0c49d}
+html[data-theme="dark"] .overlap-state{background:#202b32;border-color:#455660;color:#bdc9cf}
+html[data-theme="dark"] .overlap-state::before{background:#6f7f89}
+html[data-theme="dark"] .overlap-state.has-overlaps{background:#3a2519;border-color:#86512e;color:#f0c49d}
+html[data-theme="dark"] .overlap-state.has-overlaps::before{background:#d97829}
 html[data-theme="dark"] .floating-menu,
 html[data-theme="dark"] .booking-context-menu{background:#15212a;border-color:#3b505c;box-shadow:0 16px 38px rgba(0,0,0,.5)}
 html[data-theme="dark"] .quick-type-button,
@@ -848,6 +854,8 @@ function bind(){
  $('deleteConfirmOverlay').addEventListener('click',e=>{if(e.target===$('deleteConfirmOverlay'))closeDeleteConfirm()});
 
  window.addEventListener('beforeprint',prepareForPrint);
+ window.addEventListener('afterprint',scheduleBookingLabelFit);
+ window.addEventListener('resize',scheduleBookingLabelFit);
  document.addEventListener('pointermove',onPointerMove,{passive:false});
  document.addEventListener('pointerup',endPointerDrag);
  document.addEventListener('pointercancel',endPointerDrag);
@@ -1069,7 +1077,7 @@ function renderSheet(){
     const boundaryLeft=(t-visibleStart)/(visibleEnd-visibleStart)*100;
     bookingLines+=`<span class="booking-grid-line${t%60===0?' major':''}" style="left:${boundaryLeft}%" aria-hidden="true"></span>`;
    }
-   html+=`<div class="booking-block${isSel?' selected':''}" data-booking-id="${b.id}" title="${escapeHtml(b.activity)} | ${b.start}-${b.end} | ${coverageMode(b)==='lanes'?`Lanes ${first}-${last}`:coverageMode(b)==='all'?'Whole pool':coverageMode(b)==='half-first'?'Lane 1 side half':'Opposite side half'}" style="left:${left}%;width:${width}%;top:${top}%;height:${height}%;background-color:${blockColour};color:${textColour(blockColour)}">${bookingLines}<span class="booking-content">${escapeHtml(b.activity)}</span>${isSel?'<span class="drag-handle left" data-mode="resize-start"></span><span class="drag-handle right" data-mode="resize-end"></span>'+ (coverageMode(b)==='lanes'?'<span class="drag-handle top" data-mode="resize-top"></span><span class="drag-handle bottom" data-mode="resize-bottom"></span>':'') +'<button type="button" class="nudge-arrow prev" data-nudge="-15" aria-label="Move 15 minutes earlier">‹</button><button type="button" class="nudge-arrow next" data-nudge="15" aria-label="Move 15 minutes later">›</button><button type="button" class="booking-delete-btn" data-delete-booking="'+b.id+'" aria-label="Delete '+escapeHtml(b.activity)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z"/></svg></button>':''}</div>`;
+   html+=`<div class="booking-block${isSel?' selected':''}" data-booking-id="${b.id}" title="${escapeHtml(b.activity)} | ${b.start}-${b.end} | ${coverageMode(b)==='lanes'?`Lanes ${first}-${last}`:coverageMode(b)==='all'?'Whole pool':coverageMode(b)==='half-first'?'Lane 1 side half':'Opposite side half'}" style="left:${left}%;width:${width}%;top:${top}%;height:${height}%;background-color:${blockColour};color:${textColour(blockColour)}">${bookingLines}<span class="booking-content" data-full-label="${escapeHtml(b.activity)}">${escapeHtml(b.activity)}</span>${isSel?'<span class="drag-handle left" data-mode="resize-start"></span><span class="drag-handle right" data-mode="resize-end"></span>'+ (coverageMode(b)==='lanes'?'<span class="drag-handle top" data-mode="resize-top"></span><span class="drag-handle bottom" data-mode="resize-bottom"></span>':'') +'<button type="button" class="nudge-arrow prev" data-nudge="-15" aria-label="Move 15 minutes earlier">‹</button><button type="button" class="nudge-arrow next" data-nudge="15" aria-label="Move 15 minutes later">›</button><button type="button" class="booking-delete-btn" data-delete-booking="'+b.id+'" aria-label="Delete '+escapeHtml(b.activity)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-2 6h10l-1 11H8L7 9Zm3 2v7h2v-7h-2Zm4 0v7h2v-7h-2Z"/></svg></button>':''}</div>`;
   });
   const laneLeft=pct(clamp(open,viewStart,viewEnd)-viewStart),laneRight=pct(viewEnd-clamp(close,viewStart,viewEnd));
   for(let lane=1;lane<state.laneCount;lane++)html+=`<div style="position:absolute;left:${laneLeft}%;right:${laneRight}%;top:${lane/state.laneCount*100}%;border-top:1px dashed rgba(66,82,94,.28);pointer-events:none;z-index:1"></div>`;
@@ -1082,6 +1090,76 @@ function renderSheet(){
  $('sheet').querySelectorAll('[data-nudge]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();nudgeTime(Number(btn.dataset.nudge))}));
  $('sheet').querySelectorAll('[data-delete-booking]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();requestDeleteBooking(btn.dataset.deleteBooking)}));
  $('sheet').onclick=e=>{if(!e.target.closest('.booking-block'))deselectBooking()};
+ scheduleBookingLabelFit();
+}
+let bookingLabelFitFrame=0;
+function scheduleBookingLabelFit(){
+ cancelAnimationFrame(bookingLabelFitFrame);
+ bookingLabelFitFrame=requestAnimationFrame(()=>{bookingLabelFitFrame=0;fitBookingLabels()});
+}
+function compactBookingLabel(text,length){
+ const clean=String(text||'').trim();
+ if(length>=clean.length)return clean;
+ let shortened=clean.slice(0,Math.max(1,length)).trimEnd();
+ const lastSpace=shortened.lastIndexOf(' ');
+ if(lastSpace>=4&&lastSpace>=shortened.length*.55)shortened=shortened.slice(0,lastSpace);
+ return (shortened||clean.slice(0,1))+'…';
+}
+function conciseBookingMarker(text,maxCharacters=2){
+ const clean=String(text||'').trim();
+ if(!clean)return '•';
+ const words=clean.split(/\s+/).filter(Boolean);
+ if(words.length>1){
+  const initials=words.map(word=>word[0]).join('').toUpperCase();
+  return initials.slice(0,maxCharacters)||clean[0].toUpperCase();
+ }
+ return clean.slice(0,maxCharacters).toUpperCase();
+}
+function fitBookingLabels(){
+ document.querySelectorAll('.booking-block[data-booking-id] .booking-content').forEach(content=>{
+  const block=content.closest('.booking-block');
+  const fullLabel=content.dataset.fullLabel||content.textContent.trim();
+  content.dataset.fullLabel=fullLabel;
+  content.textContent=fullLabel;
+  content.style.fontSize='';
+  content.style.lineHeight='';
+  content.style.letterSpacing='';
+  block.classList.remove('label-truncated');
+  if(block.clientWidth<3||block.clientHeight<3)return;
+  if(block.clientWidth<24){
+   content.textContent=conciseBookingMarker(fullLabel,1);
+   content.style.fontSize=(window.matchMedia('print').matches?7:8)+'px';
+   content.style.lineHeight='1';
+   block.classList.add('label-truncated');
+   return;
+  }
+  if(block.clientWidth<35){
+   content.textContent=conciseBookingMarker(fullLabel,2);
+   content.style.fontSize=(window.matchMedia('print').matches?6.5:7.5)+'px';
+   content.style.lineHeight='1';
+   block.classList.add('label-truncated');
+   return;
+  }
+  const initialSize=parseFloat(getComputedStyle(block).fontSize)||10;
+  const minimumSize=window.matchMedia('print').matches?5.5:6;
+  const fits=()=>content.scrollWidth<=content.clientWidth+1&&content.scrollHeight<=content.clientHeight+1;
+  let size=initialSize;
+  while(size>minimumSize&&!fits()){
+   size=Math.max(minimumSize,size-.5);
+   content.style.fontSize=size+'px';
+   content.style.lineHeight='1.02';
+  }
+  if(fits())return;
+  let low=1,high=fullLabel.length,best='…';
+  while(low<=high){
+   const middle=Math.floor((low+high)/2);
+   const candidate=compactBookingLabel(fullLabel,middle);
+   content.textContent=candidate;
+   if(fits()){best=candidate;low=middle+1}else high=middle-1;
+  }
+  content.textContent=best;
+  block.classList.add('label-truncated');
+ });
 }
 function startPointerDrag(e){
  const block=e.currentTarget,id=block.dataset.bookingId,b=state.bookings.find(x=>x.id===id);if(!b)return;
@@ -1867,9 +1945,10 @@ function updateOverlapIndicator(map=conflictMap()){
  const ids=[...map.entries()].filter(([,others])=>others.size).map(([id])=>id);
  const pairCount=[...map.values()].reduce((sum,set)=>sum+set.size,0)/2;
  const badge=$('overlapState');if(!badge)return;
- badge.hidden=!pairCount;
- badge.textContent=pairCount?`${pairCount} overlap${pairCount===1?'':'s'}`:'';
- badge.title=pairCount?`${ids.length} bookings are involved in ${pairCount} overlap${pairCount===1?'':'s'}. Overlaps are warnings only.`:'';
+ badge.hidden=false;
+ badge.classList.toggle('has-overlaps',pairCount>0);
+ badge.textContent=pairCount?`${pairCount} overlap${pairCount===1?'':'s'}`:'No overlaps';
+ badge.title=pairCount?`${ids.length} bookings are involved in ${pairCount} overlap${pairCount===1?'':'s'}. Overlaps are warnings only.`:'No booking overlaps detected.';
 }
 function applySelectionAndConflictStyles(){
  const conflicts=conflictMap();
