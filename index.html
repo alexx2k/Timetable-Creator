@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pool Timetable Creator V9</title>
+<title>Pool Timetable Creator V13</title>
 <style>
 :root {
   --navy:#163a5f;
@@ -179,11 +179,13 @@ button:disabled{opacity:.55;cursor:not-allowed}
     <details class="collapsible" open>
       <summary>Timetable settings</summary>
       <div class="collapsible-body">
+        <div class="field"><label for="centreInput">Centre</label><select id="centreInput"><option value="east-sands">East Sands Leisure Centre</option><option value="cupar">Cupar Sports Centre</option></select></div>
+        <div class="help">Choosing a centre updates the subtitle and printed contact details automatically.</div>
         <div class="field"><label for="titleInput">Printed title</label><input id="titleInput" value="Main Pool Timetable"></div>
-        <div class="field"><label for="subtitleInput">Subtitle / effective date</label><input id="subtitleInput" value="Weekly Programme"></div>
+        <div class="field"><label for="subtitleInput">Subtitle / effective date</label><input id="subtitleInput" value="East Sands Leisure Centre"></div>
         <h3 class="settings-subheading">Printed footer details</h3>
-        <div class="field"><label for="venueNameInput">Venue name</label><input id="venueNameInput" value="Waterstone Crook Sports Centre"></div>
-        <div class="field"><label for="venueAddressInput">Venue address</label><input id="venueAddressInput" value="Kirk Road, Newport-on-Tay, DD6 8HY"></div>
+        <div class="field"><label for="venueNameInput">Venue name</label><input id="venueNameInput" value="East Sands Leisure Centre"></div>
+        <div class="field"><label for="venueAddressInput">Venue address and telephone</label><input id="venueAddressInput" value="St Mary Street, St Andrews, KY16 8LH · 01334 659473"></div>
         <div class="field footer-field"><label for="admissionsPolicyInput">Admissions policy / adult-to-child ratio</label><textarea id="admissionsPolicyInput">Children under 8 years must be accompanied by an adult aged 16 or over in the same water. Parent/child ratios: 1 adult to 2 children under 5 years, or 1 adult to 3 children aged 5–7 years.</textarea></div>
         <div class="help">These details appear along the bottom of the printed timetable beside the Fife Sports and Leisure Trust wordmark.</div>
         <div class="inline-fields">
@@ -276,7 +278,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
   <section class="panel preview-panel">
     <div class="panel-title">Live print preview</div>
     <div class="preview-wrap"><div class="sheet" id="sheet">
-      <div class="sheet-heading"><h2>Main Pool Timetable</h2><div class="subtitle">Weekly Programme</div></div>
+      <div class="sheet-heading"><h2>Main Pool Timetable</h2><div class="subtitle">East Sands Leisure Centre</div></div>
       <div class="timetable">
         <div class="time-header"><div class="corner">DAY</div><div class="time-track"><div class="time-label start">7am</div><div class="time-label" style="left:20%">10am</div><div class="time-label" style="left:40%">1pm</div><div class="time-label" style="left:60%">4pm</div><div class="time-label" style="left:80%">7pm</div><div class="time-label end">10pm</div></div></div>
         <div class="day-row"><div class="day-label">Monday<small>08:00 – 22:00</small></div><div class="day-track"></div></div>
@@ -313,8 +315,12 @@ const DEFAULT_SESSION_TYPES=[
  {id:'closure',name:'Pool Closure',defaultTitle:'CLOSED',colour:'#c9ced2'}
 ];
 const SNAP=15;
+const CENTRES={
+ 'east-sands':{subtitle:'East Sands Leisure Centre',venueName:'East Sands Leisure Centre',venueAddress:'St Mary Street, St Andrews, KY16 8LH · 01334 659473'},
+ 'cupar':{subtitle:'Cupar Sports Centre',venueName:'Cupar Sports Centre',venueAddress:'Carslogie Road, Cupar, KY15 4HY · 01334 659324'}
+};
 const freshState=()=>({
- title:'Main Pool Timetable',subtitle:'Weekly Programme',venueName:'Waterstone Crook Sports Centre',venueAddress:'Kirk Road, Newport-on-Tay, DD6 8HY',admissionsPolicy:'Children under 8 years must be accompanied by an adult aged 16 or over in the same water. Parent/child ratios: 1 adult to 2 children under 5 years, or 1 adult to 3 children aged 5–7 years.',laneCount:4,interval:15,
+ centreId:'east-sands',title:'Main Pool Timetable',subtitle:'East Sands Leisure Centre',venueName:'East Sands Leisure Centre',venueAddress:'St Mary Street, St Andrews, KY16 8LH · 01334 659473',admissionsPolicy:'Children under 8 years must be accompanied by an adult aged 16 or over in the same water. Parent/child ratios: 1 adult to 2 children under 5 years, or 1 adult to 3 children aged 5–7 years.',laneCount:4,interval:15,
  viewStart:'07:00',viewEnd:'22:00',days:DEFAULT_DAYS.map(d=>({...d})),
  sessionTypes:DEFAULT_SESSION_TYPES.map(t=>({...t})),bookings:[]
 });
@@ -356,6 +362,7 @@ function normalizeState(candidate={}){
  normalized.viewEnd=normalized.viewEnd||'22:00';
  if(!/^\d{2}:\d{2}$/.test(normalized.viewEnd))normalized.viewEnd='22:00';
  if(mins(normalized.viewEnd)<=mins(normalized.viewStart)){normalized.viewStart='07:00';normalized.viewEnd='22:00'}
+ normalized.centreId=CENTRES[normalized.centreId]?normalized.centreId:(String(normalized.venueName||'').toLowerCase().includes('cupar')?'cupar':'east-sands');
  state=normalized;
  state.bookings=Array.isArray(candidate.bookings)?candidate.bookings.map(b=>{
   let typeId=b.sessionTypeId;
@@ -371,7 +378,8 @@ function init(){
  bind();loadAutosave();syncInputs();renderLanePicker();renderSessionTypeControls();resetForm();renderAll();
 }
 function bind(){
- ['titleInput','subtitleInput'].forEach(id=>$(id).addEventListener('input',syncSettings));
+ ['titleInput','subtitleInput','venueNameInput','venueAddressInput','admissionsPolicyInput'].forEach(id=>$(id).addEventListener('input',syncSettings));
+ $('centreInput').addEventListener('change',applyCentrePreset);
  $('laneCountInput').addEventListener('change',()=>{state.laneCount=clamp(Number($('laneCountInput').value)||1,1,12);$('laneCountInput').value=state.laneCount;state.bookings.forEach(b=>b.lanes=laneRange(b.lanes));renderLanePicker();saveAndRender()});
  $('intervalInput').addEventListener('change',()=>{state.interval=Number($('intervalInput').value);saveAndRender()});
  ['viewStartInput','viewEndInput'].forEach(id=>$(id).addEventListener('change',updateViewRange));
@@ -393,7 +401,8 @@ function bind(){
  document.addEventListener('pointercancel',endPointerDrag);
  document.addEventListener('keydown',e=>{if(!selected())return;if(e.key==='ArrowLeft'){e.preventDefault();nudgeTime(-SNAP)}else if(e.key==='ArrowRight'){e.preventDefault();nudgeTime(SNAP)}else if(e.key==='Delete'){removeBooking(selectedId)}});
 }
-function syncSettings(){state.title=$('titleInput').value;state.subtitle=$('subtitleInput').value;state.venueName=$('venueNameInput').value;state.venueAddress=$('venueAddressInput').value;state.admissionsPolicy=$('admissionsPolicyInput').value;saveAndRender()}
+function applyCentrePreset(){const id=$('centreInput').value,p=CENTRES[id];if(!p)return;state.centreId=id;state.subtitle=p.subtitle;state.venueName=p.venueName;state.venueAddress=p.venueAddress;$('subtitleInput').value=p.subtitle;$('venueNameInput').value=p.venueName;$('venueAddressInput').value=p.venueAddress;saveAndRender()}
+function syncSettings(){state.centreId=$('centreInput').value;state.title=$('titleInput').value;state.subtitle=$('subtitleInput').value;state.venueName=$('venueNameInput').value;state.venueAddress=$('venueAddressInput').value;state.admissionsPolicy=$('admissionsPolicyInput').value;saveAndRender()}
 function updateViewRange(e){
  const proposedStart=$('viewStartInput').value,proposedEnd=$('viewEndInput').value;
  if(!proposedStart||!proposedEnd||mins(proposedEnd)<=mins(proposedStart)){
@@ -504,7 +513,7 @@ function moveLane(delta){const b=selected();if(!b||coverageMode(b)!=='lanes')ret
 function saveAndRender(){try{localStorage.setItem('poolTimetableCreatorV11',JSON.stringify(state))}catch(e){}renderAll();$('status').textContent='Saved in this browser'}
 function loadAutosave(){let raw=null;try{raw=localStorage.getItem('poolTimetableCreatorV11')||localStorage.getItem('poolTimetableCreatorV9')||localStorage.getItem('poolTimetableCreatorV8')||localStorage.getItem('poolTimetableCreatorV7')||localStorage.getItem('poolTimetableCreatorV6')||localStorage.getItem('poolTimetableCreatorV6')||localStorage.getItem('poolTimetableCreatorV5')||localStorage.getItem('poolTimetableCreatorV4')||localStorage.getItem('poolTimetableCreatorV3')||localStorage.getItem('poolTimetableCreator')}catch(e){}if(!raw)return;try{const saved=JSON.parse(raw);if(saved&&Array.isArray(saved.bookings)){normalizeState(saved);$('status').textContent='Restored saved timetable'}}catch(e){}}
 function syncInputs(){
- $('titleInput').value=state.title;$('subtitleInput').value=state.subtitle;$('laneCountInput').value=state.laneCount;$('intervalInput').value=state.interval;
+ $('centreInput').value=CENTRES[state.centreId]?state.centreId:'east-sands';$('titleInput').value=state.title;$('subtitleInput').value=state.subtitle;$('venueNameInput').value=state.venueName;$('venueAddressInput').value=state.venueAddress;$('admissionsPolicyInput').value=state.admissionsPolicy;$('laneCountInput').value=state.laneCount;$('intervalInput').value=state.interval;
  $('viewStartInput').value=state.viewStart;$('viewEndInput').value=state.viewEnd;
  state.days.forEach((d,i)=>{$(`open-${i}`).value=d.open;$(`close-${i}`).value=d.close});renderSessionTypeControls();updateRangeWarning();
 }
