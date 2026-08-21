@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-app-version="2.1">
+<html lang="en" data-app-version="2.2">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,6 +12,7 @@ try {
 </script>
 <link rel="stylesheet" href="css/app.css" />
 <link rel="stylesheet" href="css/ui.css" />
+<link rel="stylesheet" href="css/footer-editor.css" />
 </head>
 <body>
 <button id="themeToggle" class="theme-toggle" type="button" role="switch" aria-checked="false" aria-label="Use dark mode" title="Use dark mode">
@@ -49,9 +50,10 @@ try {
         <div class="field"><label for="subtitleInput">Subtitle</label><input id="subtitleInput" value="East Sands Leisure Centre"></div>
 
         <h3 class="settings-subheading">Footer</h3>
-        <div class="field" hidden><label for="venueNameInput">Venue name</label><input id="venueNameInput" value="East Sands Leisure Centre"></div>
-        <div class="field" hidden><label for="venueAddressInput">Venue address and telephone</label><input id="venueAddressInput" value="St Mary Street, St Andrews, KY16 8LH · 01334 659473"></div>
-        <div class="field footer-field" hidden><label for="admissionsPolicyInput">Admissions policy</label><textarea id="admissionsPolicyInput">Children under 8 years must be accompanied by an adult aged 16 or over in the same water. Parent/child ratios: 1 adult to 2 children under 5 years, or 1 adult to 3 children aged 5–7 years.</textarea></div>
+        <div class="field"><label for="venueNameInput">Venue name</label><input id="venueNameInput" value="East Sands Leisure Centre"></div>
+        <div class="field"><label for="venueAddressInput">Venue address and telephone</label><input id="venueAddressInput" value="St Mary Street, St Andrews, KY16 8LH · 01334 659473"></div>
+        <div class="field footer-field"><label for="admissionsPolicyInput">Admission policy</label><textarea id="admissionsPolicyInput">Children under 8 years must be accompanied by an adult aged 16 or over in the same water. Parent/child ratios: 1 adult to 2 children under 5 years, or 1 adult to 3 children aged 5–7 years.</textarea></div>
+        <div class="footer-edit-actions"><button id="editFooterMarkdownBtn" type="button" class="secondary">Edit with Markdown</button></div>
 
         <div class="inline-fields">
           <div class="field"><label for="laneCountInput">Number of lanes</label><input id="laneCountInput" type="number" min="1" max="12" value="4"></div>
@@ -168,6 +170,39 @@ try {
   </div>
 </div>
 
+<div id="footerMarkdownOverlay" class="footer-markdown-overlay" role="dialog" aria-modal="true" aria-labelledby="footerMarkdownTitle" aria-hidden="true">
+  <div class="footer-markdown-dialog">
+    <div class="footer-markdown-header">
+      <h2 id="footerMarkdownTitle">Edit footer with Markdown</h2>
+      <button id="closeFooterMarkdownBtn" class="footer-markdown-close" type="button" aria-label="Close">×</button>
+    </div>
+    <div class="footer-markdown-body">
+      <div class="footer-markdown-section">
+        <label for="footerContactMarkdownInput">Contact details</label>
+        <div class="markdown-toolbar">
+          <button type="button" data-footer-md-action="bold" data-footer-md-target="footerContactMarkdownInput" title="Bold" aria-label="Bold"><strong>B</strong></button>
+          <button type="button" data-footer-md-action="italic" data-footer-md-target="footerContactMarkdownInput" title="Italic" aria-label="Italic"><em>I</em></button>
+          <button type="button" data-footer-md-action="list" data-footer-md-target="footerContactMarkdownInput" title="Bulleted list" aria-label="Bulleted list">• List</button>
+        </div>
+        <textarea id="footerContactMarkdownInput" spellcheck="true"></textarea>
+      </div>
+      <div class="footer-markdown-section">
+        <label for="footerPolicyMarkdownInput">Admission policy</label>
+        <div class="markdown-toolbar">
+          <button type="button" data-footer-md-action="bold" data-footer-md-target="footerPolicyMarkdownInput" title="Bold" aria-label="Bold"><strong>B</strong></button>
+          <button type="button" data-footer-md-action="italic" data-footer-md-target="footerPolicyMarkdownInput" title="Italic" aria-label="Italic"><em>I</em></button>
+          <button type="button" data-footer-md-action="list" data-footer-md-target="footerPolicyMarkdownInput" title="Bulleted list" aria-label="Bulleted list">• List</button>
+        </div>
+        <textarea id="footerPolicyMarkdownInput" spellcheck="true"></textarea>
+      </div>
+    </div>
+    <div class="footer-markdown-footer">
+      <button id="cancelFooterMarkdownBtn" type="button" class="secondary">Cancel</button>
+      <button id="applyFooterMarkdownBtn" type="button">Apply changes</button>
+    </div>
+  </div>
+</div>
+
 <div id="bookingContextMenu" class="booking-context-menu floating-menu" hidden role="menu" aria-label="Booking actions"></div>
 
 <div id="deleteConfirmOverlay" class="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle" aria-describedby="deleteConfirmText">
@@ -188,6 +223,7 @@ try {
 <script src="js/exact-half-coverage.js"></script>
 <script src="js/theme.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/footer-editor.js"></script>
 <script src="js/boot.js"></script>
 </body>
 </html>
