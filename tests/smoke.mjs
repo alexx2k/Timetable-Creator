@@ -55,7 +55,7 @@ try{
   {name:'Aqua Class',defaultTitle:'Aqua Class',colour:'#91c9a8'},
   {name:'Pool Closure',defaultTitle:'CLOSED',colour:'#c9ced2'},
   {name:'Pool Party',defaultTitle:'Pool Party',colour:'#ff24f8'}
- ]),'Default booking types do not match the V2.1 setup');
+ ]),'Default booking types do not match the V2.2 setup');
  assert(await page.evaluate(()=>state.laneCount)===5,'Wizard did not create a five-lane timetable');
 
  const halfCheck=await page.evaluate(()=>{
@@ -144,21 +144,43 @@ try{
  assert((await page.locator('.legend').innerText()).includes('School Booking'),'New reusable booking type is missing from the key');
 
  if(!(await page.locator('#settingsPanel').evaluate(node=>node.open)))await page.locator('#settingsPanel > summary').click();
- await page.locator('#footerPolicyMarkdownInput').fill('**Admission policy**\n*Smoke test policy*');
+ assert(await page.locator('#venueNameInput').isVisible()&&await page.locator('#admissionsPolicyInput').isVisible(),'Quick footer fields are not visible');
+ await page.locator('#venueNameInput').fill('Smoke Centre');
+ await page.locator('#venueAddressInput').fill('1 Quick Street · 01234 567890');
+ await page.locator('#admissionsPolicyInput').fill('Quick policy');
  await page.waitForTimeout(50);
+ assert((await page.locator('.address-block').innerText()).includes('Smoke Centre'),'Quick contact edit did not update the footer');
+ assert((await page.locator('.policy-block').innerText()).includes('Quick policy'),'Quick policy edit did not update the footer');
+
+ await page.locator('#editFooterMarkdownBtn').click();
+ assert(await page.locator('#footerMarkdownOverlay').evaluate(node=>node.classList.contains('open')),'Markdown footer editor did not open');
+ await page.locator('#footerContactMarkdownInput').fill('**Smoke Centre**\n1 Test Street\n01234 567890');
+ await page.locator('#footerPolicyMarkdownInput').fill('**Admission policy**\n*Smoke test policy*\n\n- Ratio line');
+ assert(!(await page.locator('.policy-block').innerText()).includes('Smoke test policy'),'Markdown draft changed the footer before Apply');
+ await page.locator('#applyFooterMarkdownBtn').click();
+ await page.waitForTimeout(50);
+ assert(!(await page.locator('#footerMarkdownOverlay').evaluate(node=>node.classList.contains('open'))),'Markdown footer editor did not close after Apply');
  assert((await page.locator('.policy-block strong').textContent())==='Admission policy','Markdown bold did not render in the footer');
  assert((await page.locator('.policy-block em').textContent())==='Smoke test policy','Markdown italic did not render in the footer');
+ assert((await page.locator('.policy-block li').textContent())==='Ratio line','Markdown list did not render in the footer');
+ assert((await page.locator('#venueAddressInput').inputValue())==='1 Test Street · 01234 567890','Advanced contact edit did not sync back to quick fields');
+ assert((await page.locator('#admissionsPolicyInput').inputValue()).includes('Smoke test policy'),'Advanced policy edit did not sync back to quick fields');
+
+ await page.locator('#editFooterMarkdownBtn').click();
+ await page.locator('#footerPolicyMarkdownInput').fill('**Admission policy**\nDO NOT APPLY');
+ await page.locator('#cancelFooterMarkdownBtn').click();
+ assert(!(await page.locator('.policy-block').innerText()).includes('DO NOT APPLY'),'Cancel committed a Markdown draft');
 
  const exportJson=await page.evaluate(()=>JSON.stringify(toV2File()));
  const exportCheck=JSON.parse(exportJson);
  assert(exportCheck.format==='fslt-pool-timetable'&&exportCheck.formatVersion===2,'V2 file format changed unexpectedly');
- assert(exportCheck.app.version==='2.1','Export metadata is not V2.1');
+ assert(exportCheck.app.version==='2.2','Export metadata is not V2.2');
  assert(exportCheck.timetable.footer.policyMarkdown.includes('Smoke test policy'),'Markdown footer is missing from export');
 
  await page.locator('#uploadInput').setInputFiles({name:'Smoke-Test.json',mimeType:'application/json',buffer:Buffer.from(exportJson)});
  await page.waitForFunction(()=>state.projectName==='Smoke Test');
- const reopenCheck=await page.evaluate(()=>({type:state.sessionTypes.some(item=>item.name==='School Booking'),footer:state.footerPolicyMarkdown,lanes:state.laneCount}));
- assert(reopenCheck.type&&reopenCheck.footer.includes('Smoke test policy')&&reopenCheck.lanes===5,'Saved V2.1 timetable did not reopen with its data intact');
+ const reopenCheck=await page.evaluate(()=>({type:state.sessionTypes.some(item=>item.name==='School Booking'),footer:state.footerPolicyMarkdown,lanes:state.laneCount,policy:state.admissionsPolicy}));
+ assert(reopenCheck.type&&reopenCheck.footer.includes('Smoke test policy')&&reopenCheck.policy.includes('Smoke test policy')&&reopenCheck.lanes===5,'Saved V2.2 timetable did not reopen with its data intact');
 
  const compatibility=await page.evaluate(()=>{
   const oldFile=toV2File();
@@ -168,7 +190,7 @@ try{
   resetHistory();
   return {contact:state.footerContactMarkdown,policy:state.footerPolicyMarkdown,version:toV2File().formatVersion};
  });
- assert(compatibility.contact.includes('East Sands Leisure Centre'),'Older V2 file did not receive contact footer defaults');
+ assert(compatibility.contact.includes('Smoke Centre'),'Older V2 file did not receive contact footer defaults');
  assert(compatibility.policy.includes('Admission policy'),'Older V2 file did not receive policy footer defaults');
  assert(compatibility.version===2,'Backward-compatible load changed the file format version');
 
@@ -192,7 +214,7 @@ try{
  assert(pdfStat.size>1000,'Chromium did not produce a usable PDF');
 
  assert(pageErrors.length===0,`Browser errors: ${pageErrors.join(' | ')}`);
- console.log('V2.1 browser smoke test passed');
+ console.log('V2.2 browser smoke test passed');
 }finally{
  await browser.close();
  await new Promise(resolve=>server.close(resolve));
