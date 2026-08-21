@@ -77,6 +77,7 @@ openCreatorWizard=function(){
 };
 
 $('wizardLaneCount')?.addEventListener('input',updateExactHalfHints);
+['startCreateBtn','newBtn'].forEach(id=>$(id)?.addEventListener('click',()=>requestAnimationFrame(updateExactHalfHints)));
 
 const showBookingContextMenuBeforeExactHalfCoverage=showBookingContextMenu;
 showBookingContextMenu=function(event,id){
