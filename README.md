@@ -9,7 +9,7 @@ Live site: timetable.alexbalsillie.com
 ```text
 index.html                 Page structure and application shell
 css/
-  app.css                  Editor, responsive, dark-mode and print styling
+  app.css                  Workspace, responsive, dark-mode and print styling
   ui.css                   Markdown footer and simplified UI additions
 js/
   core.js                  Timetable state, bookings, rendering and base interactions
@@ -26,7 +26,7 @@ tests/
 fslt-logo.png              Printed FSLT logo
 ```
 
-The application uses plain browser JavaScript with no framework or build step. Scripts are loaded in dependency order from `index.html`, with `boot.js` starting the application after the feature files are ready.
+The application uses plain browser JavaScript with no framework or build step. Scripts are loaded in dependency order from `index.html`, with `boot.js` starting the application after the feature files are ready. The old standalone startup/marketing screen has been removed; a first-time visit opens the New timetable setup dialog directly over the workspace, while an autosaved timetable opens immediately.
 
 ## Validation
 
