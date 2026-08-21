@@ -21,7 +21,7 @@ js/
   theme.js                 Light/dark appearance handling
   ui.js                    User-facing wording, Markdown footer and booking-type UI
   boot.js                  Application startup
- tests/
+tests/
   smoke.mjs                Chromium release smoke test
 fslt-logo.png              Printed FSLT logo
 ```
@@ -33,7 +33,7 @@ The application uses plain browser JavaScript with no framework or build step. S
 GitHub Actions runs two checks on pushes and pull requests:
 
 - JavaScript syntax validation across `js/` and `tests/`.
-- A real Chromium smoke test that creates a timetable, checks odd-lane half-pool geometry, booking types, the printed key, Markdown footer rendering, V2 file compatibility, undo/redo and PDF generation.
+- A Chromium smoke test covering first-use setup, a five-lane timetable, exact half-pool geometry, booking drag and resize, copy/place, reusable and Custom booking types, creating a new booking type from the floating menu, the printed key, Markdown footer rendering, save/reopen, older V2 compatibility, undo/redo and PDF generation.
 
 ## Timetable files
 
