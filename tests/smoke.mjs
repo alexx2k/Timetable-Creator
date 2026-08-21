@@ -116,15 +116,13 @@ try{
   delete oldFile.timetable.footer;
   oldFile.app.version='2.0';
   normalizeState(oldFile);
+  resetHistory();
   return {contact:state.footerContactMarkdown,policy:state.footerPolicyMarkdown,version:toV2File().formatVersion};
  });
  assert(compatibility.contact.includes('East Sands Leisure Centre'),'Older V2 file did not receive contact footer defaults');
  assert(compatibility.policy.includes('Admission policy'),'Older V2 file did not receive policy footer defaults');
  assert(compatibility.version===2,'Backward-compatible load changed the file format version');
 
- await page.evaluate(()=>{
-  const booking=state.bookings.find(item=>item.id===arguments[0]);
- },bookingIds.typedId).catch(()=>{});
  await page.evaluate(id=>{
   selectedId=id;
   selectedIds.clear();
