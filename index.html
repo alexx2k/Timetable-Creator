@@ -16,7 +16,7 @@ html,body{height:100%;margin:0}body{display:grid;place-items:center;background:#
   const response=await fetch('./app-v2.0.html');
   if(!response.ok)throw new Error(`Could not load application (${response.status})`);
   let html=await response.text();
-  html=html.replace('</body>','<script src="./exact-half-coverage.js"><\\/script></body>');
+  html=html.replace('</body>','<script src="./exact-half-coverage.js"><\/script></body>');
   document.open();
   document.write(html);
   document.close();
