@@ -1,0 +1,25 @@
+/* Optional advanced footer editor. */
+.footer-edit-actions{display:flex;justify-content:flex-end;margin:-2px 0 14px}
+.footer-edit-actions button{padding:7px 10px;font-size:12px}
+.footer-markdown-overlay{position:fixed;inset:0;z-index:2400;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(8,26,39,.72);backdrop-filter:blur(5px)}
+.footer-markdown-overlay.open{display:flex}
+.footer-markdown-dialog{width:min(780px,100%);max-height:calc(100vh - 44px);display:flex;flex-direction:column;overflow:hidden;background:#fff;border:1px solid #c8d4dc;border-radius:14px;box-shadow:0 24px 70px rgba(10,30,45,.34)}
+.footer-markdown-header{display:flex;align-items:center;gap:14px;padding:17px 19px;border-bottom:1px solid #d9e2e7;background:#f7f9fa}
+.footer-markdown-header h2{margin:0;color:var(--navy);font-size:18px}
+.footer-markdown-close{margin-left:auto;width:34px;height:34px;padding:0;display:grid;place-items:center;border-radius:50%;background:transparent;color:#526672;border:1px solid transparent;font-size:22px;line-height:1}
+.footer-markdown-close:hover{background:#e8eef2;border-color:#cad6dd;color:var(--navy)}
+.footer-markdown-body{display:grid;gap:17px;padding:19px;overflow:auto}
+.footer-markdown-section>label{display:block;margin-bottom:6px;color:#30414f;font-size:13px;font-weight:800}
+.footer-markdown-section textarea{display:block;width:100%;min-height:150px;padding:11px;border:1px solid #aebbc5;border-radius:0 0 7px 7px;background:#fff;color:#17212b;font:inherit;line-height:1.5;resize:vertical}
+.footer-markdown-section:first-child textarea{min-height:120px}
+.footer-markdown-footer{display:flex;justify-content:flex-end;gap:8px;padding:14px 19px;border-top:1px solid #d9e2e7;background:#f7f9fa}
+body.footer-editor-open{overflow:hidden}
+html[data-theme="dark"] .footer-markdown-dialog{background:#151f27;border-color:#40535e;box-shadow:0 24px 70px rgba(0,0,0,.55)}
+html[data-theme="dark"] .footer-markdown-header,html[data-theme="dark"] .footer-markdown-footer{background:#101920;border-color:#344751}
+html[data-theme="dark"] .footer-markdown-header h2{color:#c1e1f4}
+html[data-theme="dark"] .footer-markdown-close{color:#a9bac5}
+html[data-theme="dark"] .footer-markdown-close:hover{background:#22313b;border-color:#40535e;color:#fff}
+html[data-theme="dark"] .footer-markdown-section>label{color:#d8e3ea}
+html[data-theme="dark"] .footer-markdown-section textarea{background:#0d161d;color:#eef5f8;border-color:#40535e}
+@media(max-width:600px){.footer-markdown-overlay{padding:8px}.footer-markdown-dialog{max-height:calc(100vh - 16px);border-radius:10px}.footer-markdown-header,.footer-markdown-body,.footer-markdown-footer{padding-left:14px;padding-right:14px}.footer-markdown-footer button{flex:1}}
+@media print{.footer-markdown-overlay{display:none!important}}
