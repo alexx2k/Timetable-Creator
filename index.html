@@ -11,46 +11,16 @@ try {
 } catch (_) {}
 </script>
 <link rel="stylesheet" href="css/app.css" />
+<link rel="stylesheet" href="css/ui.css" />
 </head>
-<body class="startup-mode">
+<body>
 <button id="themeToggle" class="theme-toggle" type="button" role="switch" aria-checked="false" aria-label="Use dark mode" title="Use dark mode">
   <span class="theme-toggle-icon sun" aria-hidden="true">☀</span>
   <span class="theme-toggle-icon moon" aria-hidden="true">☾</span>
   <span class="theme-toggle-thumb" aria-hidden="true"></span>
 </button>
 
-<section class="start-screen" id="startScreen" aria-labelledby="startTitle">
-  <div class="start-card">
-    <div class="start-card-top">
-      <div class="brand-lockup">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <div class="brand-copy"><strong>Timetable Creator</strong><span>Fife Sports and Leisure Trust</span></div>
-      </div>
-      <h1 id="startTitle">Create and manage pool timetables.</h1>
-      <p>Start a new timetable with guided setup, or open one you have already saved.</p>
-    </div>
-    <div class="start-actions">
-      <button id="startCreateBtn" class="start-action primary" type="button">
-        <span class="start-action-icon">＋</span>
-        <span><strong>Create timetable</strong><small>Choose a centre, set the pool details and enter the opening hours.</small></span>
-      </button>
-      <label class="start-action start-file">
-        <input id="startOpenInput" type="file" accept="application/json,.json">
-        <span class="start-file-inner"><span class="start-action-icon">↥</span><span><strong>Open timetable</strong><small>Select a saved timetable to continue working on it.</small></span></span>
-      </label>
-    </div>
-    <div class="version-note">Your latest work is saved automatically in this browser.</div>
-  </div>
-</section>
-
-<header class="app-header">
-  <span class="brand-mark" aria-hidden="true"></span>
-  <div class="app-heading"><h1>Timetable Creator</h1><p id="appCentreSubtitle">Pool timetable workspace</p></div>
-  <div class="header-project"><strong id="headerProjectName">Untitled timetable</strong><span id="headerProjectMeta">Pool timetable</span></div>
-</header>
-
 <div class="toolbar">
-  <button id="homeBtn" class="home-button" type="button">Projects</button>
   <button id="newBtn" class="secondary" type="button">New timetable</button>
   <div class="history-controls" aria-label="Edit history">
     <button id="undoBtn" class="tool-button" type="button" title="Undo (Ctrl+Z)" disabled><span aria-hidden="true">↶</span> Undo</button>
@@ -58,10 +28,10 @@ try {
   </div>
   <button id="downloadBtn" class="save-button" type="button">Save timetable</button>
   <label class="file-label secondary">Open timetable<input id="uploadInput" type="file" accept="application/json,.json"></label>
-  <button id="printBtn" class="warning" type="button">Print / Save PDF</button>
+  <button id="printBtn" class="warning" type="button">Print / PDF</button>
   <span class="overlap-state" id="overlapState" hidden></span>
-  <span class="file-state dirty" id="fileState" title="Your work is autosaved in this browser, but has not been saved to a timetable file.">
-    <span class="file-state-dot" aria-hidden="true"></span><span id="fileStateText">Not saved to file</span>
+  <span class="file-state dirty" id="fileState">
+    <span class="file-state-dot" aria-hidden="true"></span><span id="fileStateText">Not saved</span>
   </span>
   <span class="status" id="status">Ready</span>
 </div>
@@ -71,19 +41,17 @@ try {
 <main class="main">
   <aside class="editor-panel editor-stack">
     <details class="collapsible" id="settingsPanel">
-      <summary>Timetable settings</summary>
+      <summary>Settings</summary>
       <div class="collapsible-body">
         <div class="field"><label for="projectNameInput">Timetable name</label><input id="projectNameInput" placeholder="e.g. Summer Pool Programme"></div>
         <div class="field"><label for="centreInput">Centre</label><select id="centreInput"></select></div>
-        <div class="help">Choosing a centre updates the subtitle and printed contact details automatically.</div>
-        <div class="field"><label for="titleInput">Printed title</label><input id="titleInput" value="Main Pool Timetable"></div>
-        <div class="field"><label for="subtitleInput">Subtitle / effective date</label><input id="subtitleInput" value="East Sands Leisure Centre"></div>
+        <div class="field"><label for="titleInput">Timetable title</label><input id="titleInput" value="Main Pool Timetable"></div>
+        <div class="field"><label for="subtitleInput">Subtitle</label><input id="subtitleInput" value="East Sands Leisure Centre"></div>
 
-        <h3 class="settings-subheading">Printed footer details</h3>
-        <div class="field"><label for="venueNameInput">Venue name</label><input id="venueNameInput" value="East Sands Leisure Centre"></div>
-        <div class="field"><label for="venueAddressInput">Venue address and telephone</label><input id="venueAddressInput" value="St Mary Street, St Andrews, KY16 8LH · 01334 659473"></div>
-        <div class="field footer-field"><label for="admissionsPolicyInput">Admissions policy / adult-to-child ratio</label><textarea id="admissionsPolicyInput">Children under 8 years must be accompanied by an adult aged 16 or over in the same water. Parent/child ratios: 1 adult to 2 children under 5 years, or 1 adult to 3 children aged 5–7 years.</textarea></div>
-        <div class="help">These details appear along the bottom of the printed timetable beside the Fife Sports and Leisure Trust logo.</div>
+        <h3 class="settings-subheading">Footer</h3>
+        <div class="field" hidden><label for="venueNameInput">Venue name</label><input id="venueNameInput" value="East Sands Leisure Centre"></div>
+        <div class="field" hidden><label for="venueAddressInput">Venue address and telephone</label><input id="venueAddressInput" value="St Mary Street, St Andrews, KY16 8LH · 01334 659473"></div>
+        <div class="field footer-field" hidden><label for="admissionsPolicyInput">Admissions policy</label><textarea id="admissionsPolicyInput">Children under 8 years must be accompanied by an adult aged 16 or over in the same water. Parent/child ratios: 1 adult to 2 children under 5 years, or 1 adult to 3 children aged 5–7 years.</textarea></div>
 
         <div class="inline-fields">
           <div class="field"><label for="laneCountInput">Number of lanes</label><input id="laneCountInput" type="number" min="1" max="12" value="4"></div>
@@ -91,12 +59,12 @@ try {
         </div>
 
         <div class="auto-range-card">
-          <div><strong>Automatic timetable range</strong><span>The printed view follows the earliest opening and latest closing time.</span></div>
+          <div><strong>Timetable range</strong></div>
           <span class="auto-range-value" id="autoRangeValue">07:00–22:00</span>
         </div>
         <input id="viewStartInput" type="hidden" value="07:00"><input id="viewEndInput" type="hidden" value="22:00">
 
-        <h3 class="settings-subheading">Opening hours by day</h3>
+        <h3 class="settings-subheading">Opening hours</h3>
         <div class="hours-grid" id="openingHoursGrid">
           <div class="hours-row" data-day-hours="0"><div class="hours-day">Monday</div><div class="field"><label for="open-0">Opens</label><input id="open-0" class="day-open" data-day="0" type="time" step="900" value="08:00"></div><div class="field"><label for="close-0">Closes</label><input id="close-0" class="day-close" data-day="0" type="time" step="900" value="22:00"></div></div>
           <div class="hours-row" data-day-hours="1"><div class="hours-day">Tuesday</div><div class="field"><label for="open-1">Opens</label><input id="open-1" class="day-open" data-day="1" type="time" step="900" value="07:00"></div><div class="field"><label for="close-1">Closes</label><input id="close-1" class="day-close" data-day="1" type="time" step="900" value="21:00"></div></div>
@@ -107,70 +75,49 @@ try {
           <div class="hours-row" data-day-hours="6"><div class="hours-day">Sunday</div><div class="field"><label for="open-6">Opens</label><input id="open-6" class="day-open" data-day="6" type="time" step="900" value="08:00"></div><div class="field"><label for="close-6">Closes</label><input id="close-6" class="day-close" data-day="6" type="time" step="900" value="14:30"></div></div>
         </div>
         <div class="settings-warning" id="rangeWarning"></div>
-        <div class="help">Opening hours restrict when bookings can be placed. Time outside each day’s opening hours is marked CLOSED, while the overall view range stays the same for all seven days.</div>
       </div>
     </details>
 
     <details class="collapsible" id="sessionTypesPanel">
-      <summary>Session types</summary>
+      <summary>Booking types</summary>
       <div class="collapsible-body">
-        <div class="field"><label for="sessionTypeNameInput">Session type name</label><input id="sessionTypeNameInput" placeholder="e.g. Lane Swimming"></div>
-        <div class="field"><label for="sessionTypeTitleInput">Default booking title</label><input id="sessionTypeTitleInput" placeholder="e.g. Lane Swimming"></div>
-        <div class="field"><label for="sessionTypeColourInput">Default colour</label><div class="color-field"><input id="sessionTypeColourInput" type="color" value="#86b6d8"><span class="help" style="margin:0">Used automatically when this session type is selected.</span></div></div>
+        <div class="field"><label for="sessionTypeNameInput">Name</label><input id="sessionTypeNameInput" placeholder="e.g. Lane Swimming"></div>
+        <div class="field"><label for="sessionTypeTitleInput">Default title</label><input id="sessionTypeTitleInput" placeholder="e.g. Lane Swimming"></div>
+        <div class="field"><label for="sessionTypeColourInput">Colour</label><div class="color-field"><input id="sessionTypeColourInput" type="color" value="#b6defb"></div></div>
         <div class="form-actions">
-          <button id="saveSessionTypeBtn" type="button">Add session type</button>
+          <button id="saveSessionTypeBtn" type="button">Add booking type</button>
           <button id="cancelSessionTypeBtn" type="button" class="secondary" style="display:none">Cancel edit</button>
         </div>
         <div id="sessionTypesList" class="session-types-list"></div>
-        <div class="help">Session types provide a reusable default title and colour. Individual bookings can still override either value.</div>
       </div>
     </details>
 
-    <details class="collapsible" open id="bookingPanel">
+    <details class="collapsible" open id="bookingPanel" hidden>
       <summary>Add booking</summary>
       <div class="collapsible-body">
-        <div class="field"><label for="dayInput">Day</label><select id="dayInput">
-          <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
-        </select></div>
-        <div class="inline-fields">
-          <div class="field"><label for="startInput">Start</label><input id="startInput" type="time" step="900" value="08:00"></div>
-          <div class="field"><label for="endInput">End</label><input id="endInput" type="time" step="900" value="09:00"></div>
-        </div>
-        <div class="field"><label for="sessionTypeInput">Session type</label><select id="sessionTypeInput"></select></div>
-        <div class="field"><label for="activityInput">Booking title</label><input id="activityInput" placeholder="e.g. Lane Swimming"></div>
-        <div class="field"><label for="bookingColourInput">Booking colour</label><div class="color-field"><input id="bookingColourInput" type="color" value="#86b6d8"><span class="help" style="margin:0">Starts with the session type colour, but can be changed for this booking.</span></div></div>
-        <div class="field"><label for="coverageModeInput">Pool area</label><select id="coverageModeInput">
-          <option value="lanes">Selected lanes</option>
-          <option value="all">Whole pool</option>
-          <option value="half-first">Top half — exactly 50%</option>
-          <option value="half-second">Bottom half — exactly 50%</option>
-        </select><div class="pool-area-note">The two half-pool options divide the timetable row at its exact midpoint, so they also work correctly when the pool has an odd number of lanes.</div></div>
+        <div class="field"><label for="dayInput">Day</label><select id="dayInput"><option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option><option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option></select></div>
+        <div class="inline-fields"><div class="field"><label for="startInput">Start</label><input id="startInput" type="time" step="900" value="08:00"></div><div class="field"><label for="endInput">End</label><input id="endInput" type="time" step="900" value="09:00"></div></div>
+        <div class="field"><label for="sessionTypeInput">Booking type</label><select id="sessionTypeInput"></select></div>
+        <div class="field"><label for="activityInput">Booking title</label><input id="activityInput"></div>
+        <div class="field"><label for="bookingColourInput">Colour</label><div class="color-field"><input id="bookingColourInput" type="color" value="#b6defb"></div></div>
+        <div class="field"><label for="coverageModeInput">Pool area</label><select id="coverageModeInput"><option value="lanes">Selected lanes</option><option value="all">Whole pool</option><option value="half-first">Top half</option><option value="half-second">Bottom half</option></select></div>
         <div class="field" id="lanePickerField"><label>Lanes used</label><div id="lanePicker" class="lane-picker"></div></div>
-        <div class="form-actions" id="lanePickerActions">
-          <button id="selectAllBtn" type="button" class="secondary">All lanes</button>
-          <button id="clearLanesBtn" type="button" class="secondary">Clear lanes</button>
-        </div>
-        <div class="form-actions">
-          <button id="saveBookingBtn" type="button">Add booking</button>
-          <button id="cancelEditBtn" type="button" class="secondary" style="display:none">Cancel edit</button>
-        </div>
-        <div class="help">Choose a reusable session type to fill the default title and colour, then choose either specific lanes, the whole pool, or one exact half. These choices are mutually exclusive.</div>
+        <div class="form-actions" id="lanePickerActions"><button id="selectAllBtn" type="button" class="secondary">All lanes</button><button id="clearLanesBtn" type="button" class="secondary">Clear lanes</button></div>
+        <div class="form-actions"><button id="saveBookingBtn" type="button">Add booking</button><button id="cancelEditBtn" type="button" class="secondary" style="display:none">Cancel edit</button></div>
         <div id="bookingsList" class="bookings-list"></div>
       </div>
     </details>
 
     <section class="selection-panel" id="selectionPanel">
-      <div class="panel-title">Current booking <span class="selection-badge" id="selectionBadge">None selected</span></div>
-      <div class="panel-body" id="selectionBody">
-        <div class="selection-empty">Drag across an empty part of the timetable to create a booking. Select an existing booking to edit its title, times, lanes, session type and colour here.</div>
-      </div>
+      <div class="panel-title">Booking <span class="selection-badge" id="selectionBadge">None selected</span></div>
+      <div class="panel-body" id="selectionBody"><div class="selection-empty">Drag on the timetable to add a booking, or select one to edit it.</div></div>
     </section>
   </aside>
 
   <section class="panel preview-panel">
-    <div class="panel-title">Timetable — drag across an empty area to create a booking</div>
+    <div class="panel-title">Timetable</div>
     <div class="quick-type-bar floating-menu" id="quickTypeBar" hidden role="menu" aria-live="polite" aria-label="Choose a booking type">
-      <div class="floating-menu-heading"><strong>Choose booking type</strong><span>Further edits remain available in Current booking.</span></div>
+      <div class="floating-menu-heading"><strong>Booking type</strong></div>
       <div class="quick-type-actions" id="quickTypeActions"></div>
     </div>
     <div class="preview-wrap"><div class="sheet" id="sheet"></div></div>
@@ -181,15 +128,14 @@ try {
   <div class="wizard-card">
     <div class="wizard-header">
       <span class="brand-mark" aria-hidden="true"></span>
-      <div class="wizard-heading"><h2 id="wizardTitle">Create timetable</h2><p id="wizardSubtitle">Project and centre</p></div>
+      <div class="wizard-heading"><h2 id="wizardTitle">New timetable</h2><p id="wizardSubtitle">Project</p></div>
       <div class="wizard-progress" aria-label="Setup progress"><span class="wizard-dot active"></span><span class="wizard-dot"></span><span class="wizard-dot"></span></div>
     </div>
     <div class="wizard-body">
       <section class="wizard-step active" data-wizard-step="0">
-        <h3>Name the project and choose a centre</h3>
-        <p class="step-copy">The centre selection fills the subtitle, address and telephone number automatically.</p>
+        <h3>Name and centre</h3>
         <div class="wizard-fields">
-          <div class="field full"><label for="wizardProjectName">Project name</label><input id="wizardProjectName" placeholder="e.g. East Sands Summer Pool Timetable"></div>
+          <div class="field full"><label for="wizardProjectName">Timetable name</label><input id="wizardProjectName" placeholder="e.g. East Sands Summer Pool Timetable"></div>
           <div class="field full"><label>Centre</label><div class="centre-grid" id="wizardCentreGrid"></div></div>
           <div id="customCentreFields" class="wizard-fields full" style="display:none">
             <div class="field"><label for="wizardCustomName">Centre name</label><input id="wizardCustomName"></div>
@@ -199,26 +145,24 @@ try {
         </div>
       </section>
       <section class="wizard-step" data-wizard-step="1">
-        <h3>Set the timetable basics</h3>
-        <p class="step-copy">These settings shape the output but can still be edited later.</p>
+        <h3>Pool</h3>
         <div class="wizard-fields">
-          <div class="field full"><label for="wizardPrintedTitle">Printed title</label><input id="wizardPrintedTitle" value="Main Pool Timetable"></div>
+          <div class="field full"><label for="wizardPrintedTitle">Timetable title</label><input id="wizardPrintedTitle" value="Main Pool Timetable"></div>
           <div class="field"><label for="wizardLaneCount">Number of lanes</label><input id="wizardLaneCount" type="number" min="1" max="12" value="4"></div>
           <div class="field"><label for="wizardInterval">Grid interval</label><select id="wizardInterval"><option value="15">15 minutes</option><option value="30">30 minutes</option></select></div>
         </div>
       </section>
       <section class="wizard-step" data-wizard-step="2">
-        <h3>Enter opening times</h3>
-        <p class="step-copy">The timetable will automatically span from the earliest opening time to the latest closing time.</p>
+        <h3>Opening hours</h3>
         <div class="wizard-hours" id="wizardHours"></div>
       </section>
     </div>
     <div class="wizard-footer">
-      <span class="wizard-footer-copy" id="wizardFooterCopy">Step 1 of 3</span>
+      <span class="wizard-footer-copy" id="wizardFooterCopy">1 / 3</span>
       <div class="wizard-footer-actions">
         <button id="wizardCancelBtn" class="secondary" type="button">Cancel</button>
         <button id="wizardBackBtn" class="secondary" type="button" style="display:none">Back</button>
-        <button id="wizardNextBtn" type="button">Continue</button>
+        <button id="wizardNextBtn" type="button">Next</button>
       </div>
     </div>
   </div>
@@ -230,14 +174,11 @@ try {
   <div class="confirm-dialog">
     <h3 id="deleteConfirmTitle">Delete booking?</h3>
     <p id="deleteConfirmText">This booking will be permanently removed from the timetable.</p>
-    <div class="confirm-actions">
-      <button id="cancelDeleteBtn" type="button" class="secondary">Cancel</button>
-      <button id="confirmDeleteBtn" type="button" class="danger">Delete booking</button>
-    </div>
+    <div class="confirm-actions"><button id="cancelDeleteBtn" type="button" class="secondary">Cancel</button><button id="confirmDeleteBtn" type="button" class="danger">Delete booking</button></div>
   </div>
 </div>
 
-<noscript><div class="help">Timetable Creator requires JavaScript to edit and print timetables.</div></noscript>
+<noscript><div class="help">Timetable Creator requires JavaScript.</div></noscript>
 
 <script src="js/core.js"></script>
 <script src="js/project.js"></script>
@@ -245,6 +186,7 @@ try {
 <script src="js/professional.js"></script>
 <script src="js/exact-half-coverage.js"></script>
 <script src="js/theme.js"></script>
+<script src="js/ui.js"></script>
 <script src="js/boot.js"></script>
 </body>
 </html>
