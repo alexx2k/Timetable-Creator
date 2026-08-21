@@ -13,7 +13,7 @@ jobs:
         with:
           node-version: 22
       - name: Check JavaScript syntax
-        run: find js tests -name '*.js' -o -name '*.mjs' | xargs -n1 node --check
+        run: find js tests \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
 
   browser-smoke:
     runs-on: ubuntu-latest
