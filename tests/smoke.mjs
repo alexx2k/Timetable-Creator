@@ -101,8 +101,8 @@ try{
  if(!(await page.locator('#settingsPanel').evaluate(node=>node.open)))await page.locator('#settingsPanel > summary').click();
  await page.locator('#footerPolicyMarkdownInput').fill('**Admission policy**\n*Smoke test policy*');
  await page.waitForTimeout(50);
- assert((await page.locator('.policy-block strong').innerText())==='Admission policy','Markdown bold did not render in the footer');
- assert((await page.locator('.policy-block em').innerText())==='Smoke test policy','Markdown italic did not render in the footer');
+ assert((await page.locator('.policy-block strong').textContent())==='Admission policy','Markdown bold did not render in the footer');
+ assert((await page.locator('.policy-block em').textContent())==='Smoke test policy','Markdown italic did not render in the footer');
 
  const exportCheck=await page.evaluate(()=>{
   const file=toV2File();
