@@ -82,6 +82,51 @@ try{
  assert(legendText.join(' ').includes('Lane Swimming'),'Reusable booking type is missing from the key');
  assert(!legendText.join(' ').includes('Custom'),'Custom one-off booking incorrectly appears in the key');
 
+ const typedSelector=`.booking-block[data-booking-id="${bookingIds.typedId}"]`;
+ await page.locator(typedSelector).scrollIntoViewIfNeeded();
+ const beforeDragStart=await page.evaluate(id=>state.bookings.find(item=>item.id===id)?.start,bookingIds.typedId);
+ let blockBox=await page.locator(typedSelector).boundingBox();
+ assert(blockBox,'Could not locate booking for drag test');
+ await page.mouse.move(blockBox.x+blockBox.width/2,blockBox.y+blockBox.height/2);
+ await page.mouse.down();
+ await page.mouse.move(blockBox.x+blockBox.width/2+42,blockBox.y+blockBox.height/2,{steps:4});
+ await page.mouse.up();
+ await page.waitForTimeout(50);
+ const afterDragStart=await page.evaluate(id=>state.bookings.find(item=>item.id===id)?.start,bookingIds.typedId);
+ assert(afterDragStart&&afterDragStart!==beforeDragStart,'Pointer drag did not move the booking');
+
+ await page.locator(typedSelector).click();
+ const beforeResizeEnd=await page.evaluate(id=>state.bookings.find(item=>item.id===id)?.end,bookingIds.typedId);
+ const rightHandle=page.locator(`${typedSelector} .drag-handle.right`);
+ const handleBox=await rightHandle.boundingBox();
+ assert(handleBox,'Could not locate resize handle');
+ await page.mouse.move(handleBox.x+handleBox.width/2,handleBox.y+handleBox.height/2);
+ await page.mouse.down();
+ await page.mouse.move(handleBox.x+handleBox.width/2+34,handleBox.y+handleBox.height/2,{steps:4});
+ await page.mouse.up();
+ await page.waitForTimeout(50);
+ const afterResizeEnd=await page.evaluate(id=>state.bookings.find(item=>item.id===id)?.end,bookingIds.typedId);
+ assert(afterResizeEnd&&afterResizeEnd!==beforeResizeEnd,'Resize handle did not change the booking duration');
+
+ const beforeCopyCount=await page.evaluate(()=>state.bookings.length);
+ await page.evaluate(id=>beginCopyBooking(id),bookingIds.typedId);
+ const copyTarget=page.locator('.day-track[data-day="2"]');
+ await copyTarget.scrollIntoViewIfNeeded();
+ const copyTargetBox=await copyTarget.boundingBox();
+ assert(copyTargetBox,'Could not locate copy target');
+ await page.mouse.click(copyTargetBox.x+copyTargetBox.width*.35,copyTargetBox.y+copyTargetBox.height*.25);
+ await page.waitForTimeout(50);
+ const copyResult=await page.evaluate(()=>({count:state.bookings.length,selected:selectedId,day:state.bookings.find(item=>item.id===selectedId)?.day}));
+ assert(copyResult.count===beforeCopyCount+1&&copyResult.day===2,'Copy/place did not create a booking on the target day');
+
+ await page.evaluate(({typedId,copiedId})=>{
+  state.bookings=state.bookings.filter(item=>item.id!==copiedId).map(item=>item.id===typedId?{...item,start:'10:00',end:'11:00',lanes:[1,2]}:item);
+  selectedId=null;
+  selectedIds.clear();
+  saveAndRender();
+  resetHistory();
+ },{typedId:bookingIds.typedId,copiedId:copyResult.selected});
+
  await page.evaluate(()=>{
   const id=uid();
   state.bookings.push({id,day:1,start:'09:00',end:'10:00',activity:'New booking',lanes:[1],coverageMode:'lanes',sessionTypeId:'',sessionTypeName:'Custom',colourHex:'#b4c4d2'});
@@ -104,13 +149,16 @@ try{
  assert((await page.locator('.policy-block strong').textContent())==='Admission policy','Markdown bold did not render in the footer');
  assert((await page.locator('.policy-block em').textContent())==='Smoke test policy','Markdown italic did not render in the footer');
 
- const exportCheck=await page.evaluate(()=>{
-  const file=toV2File();
-  return {format:file.format,formatVersion:file.formatVersion,appVersion:file.app.version,footer:file.timetable.footer};
- });
+ const exportJson=await page.evaluate(()=>JSON.stringify(toV2File()));
+ const exportCheck=JSON.parse(exportJson);
  assert(exportCheck.format==='fslt-pool-timetable'&&exportCheck.formatVersion===2,'V2 file format changed unexpectedly');
- assert(exportCheck.appVersion==='2.1','Export metadata is not V2.1');
- assert(exportCheck.footer.policyMarkdown.includes('Smoke test policy'),'Markdown footer is missing from export');
+ assert(exportCheck.app.version==='2.1','Export metadata is not V2.1');
+ assert(exportCheck.timetable.footer.policyMarkdown.includes('Smoke test policy'),'Markdown footer is missing from export');
+
+ await page.locator('#uploadInput').setInputFiles({name:'Smoke-Test.json',mimeType:'application/json',buffer:Buffer.from(exportJson)});
+ await page.waitForFunction(()=>state.projectName==='Smoke Test');
+ const reopenCheck=await page.evaluate(()=>({type:state.sessionTypes.some(item=>item.name==='School Booking'),footer:state.footerPolicyMarkdown,lanes:state.laneCount}));
+ assert(reopenCheck.type&&reopenCheck.footer.includes('Smoke test policy')&&reopenCheck.lanes===5,'Saved V2.1 timetable did not reopen with its data intact');
 
  const compatibility=await page.evaluate(()=>{
   const oldFile=toV2File();
