@@ -28,5 +28,5 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Run V2.2 browser tests
         run: |
-          node tests/smoke.mjs
           node tests/keyboard-regression.mjs
+          node tests/smoke.mjs
