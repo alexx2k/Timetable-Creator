@@ -77,7 +77,7 @@ function toV2File(current=state){
  return {
   format:FILE_FORMAT,
   formatVersion:FILE_VERSION,
-  app:{name:'Timetable Creator',version:'2.0'},
+  app:{name:'Timetable Creator',version:'2.1'},
   project:{id:current.projectId||uid(),name:current.projectName||current.title||'Untitled timetable',createdAt:current.createdAt||now,updatedAt:now},
   venue:{id:current.centreId||'custom',name:current.venueName||current.subtitle||'Venue',subtitle:current.subtitle||current.venueName||'',address:contact.address||preset.address||'',phone:contact.phone||preset.phone||''},
   timetable:{title:current.title||'Main Pool Timetable',laneCount:Number(current.laneCount)||4,interval:Number(current.interval)||15,days:(current.days||[]).map(day=>({name:day.name,open:day.open,close:day.close})),admissionsPolicy:current.admissionsPolicy||''},
@@ -93,24 +93,20 @@ function populateCentreSelect(){
 
 function updateProjectChrome(){
  const range=`${state.viewStart}–${state.viewEnd}`;
- $('headerProjectName').textContent=state.projectName||'Untitled timetable';
- $('headerProjectMeta').textContent=`${state.venueName||state.subtitle||'Custom venue'} · ${range}`;
- $('appCentreSubtitle').textContent=state.venueName||state.subtitle||'Pool timetable workspace';
+ if($('headerProjectName'))$('headerProjectName').textContent=state.projectName||'Untitled timetable';
+ if($('headerProjectMeta'))$('headerProjectMeta').textContent=`${state.venueName||state.subtitle||'Custom venue'} · ${range}`;
+ if($('appCentreSubtitle'))$('appCentreSubtitle').textContent=state.venueName||state.subtitle||'Pool timetable workspace';
  if($('projectChip'))$('projectChip').textContent='';
- $('autoRangeValue').textContent=range;
+ if($('autoRangeValue'))$('autoRangeValue').textContent=range;
  document.title=`${state.projectName||'Timetable'} · Timetable Creator`;
 }
 
 function showWorkspace(){
- document.body.classList.remove('startup-mode');
- $('setupWizard').classList.remove('open');
+ $('setupWizard')?.classList.remove('open');
  updateProjectChrome();
 }
 
-function showStartScreen(){
- document.body.classList.add('startup-mode');
- $('setupWizard').classList.remove('open');
-}
+function showStartScreen(){openCreatorWizard()}
 
 function showImportNotice(){
  const box=$('importNotice');
@@ -187,8 +183,8 @@ function openCreatorWizard(){
 
 function validateWizardStep(){
  if(wizardStep===0){
-  if(!$('wizardProjectName').value.trim()){alert('Enter a project name.');return false}
-  if(wizardCentreId==='custom'&&!$('wizardCustomName').value.trim()){alert('Enter the custom centre name.');return false}
+  if(!$('wizardProjectName').value.trim()){alert('Enter a timetable name.');return false}
+  if(wizardCentreId==='custom'&&!$('wizardCustomName').value.trim()){alert('Enter the centre name.');return false}
  }
  if(wizardStep===1){
   const lanes=Number($('wizardLaneCount').value);
@@ -368,17 +364,11 @@ uploadJson=function(event){handleFile(event.target.files[0],event.target)};
 
 bind=function(){
  legacyBind();
- $('homeBtn').addEventListener('click',showStartScreen);
- $('startCreateBtn').addEventListener('click',openCreatorWizard);
- $('startOpenInput').addEventListener('change',event=>handleFile(event.target.files[0],event.target));
- $('wizardCancelBtn').addEventListener('click',()=>{
-  $('setupWizard').classList.remove('open');
-  if(!state?.projectName)showStartScreen();
- });
+ $('wizardCancelBtn').addEventListener('click',()=>$('setupWizard').classList.remove('open'));
  $('wizardBackBtn').addEventListener('click',()=>setWizardStep(wizardStep-1));
  $('wizardNextBtn').addEventListener('click',handleWizardNext);
  $('setupWizard').addEventListener('click',event=>{
-  if(event.target===$('setupWizard')&&state?.projectName)$('setupWizard').classList.remove('open');
+  if(event.target===$('setupWizard'))$('setupWizard').classList.remove('open');
  });
 };
 
@@ -391,7 +381,7 @@ init=function(){
  renderSessionTypeControls();
  resetForm();
  renderAll();
- updateProjectChrome();
- if(restored){showWorkspace();$('status').textContent='Restored last project'}
- else showStartScreen();
+ showWorkspace();
+ if(restored)$('status').textContent='Restored last timetable';
+ else openCreatorWizard();
 };
