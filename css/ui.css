@@ -1,9 +1,4 @@
 /* User-facing interface cleanup */
-.start-screen,#homeBtn{display:none!important}
-body.startup-mode{overflow:auto}
-body.startup-mode>.app-header,body.startup-mode>.toolbar,body.startup-mode>.main{display:initial!important}
-body.startup-mode>.toolbar{display:flex!important}
-body.startup-mode>.main{display:grid!important}
 .markdown-field textarea{width:100%;min-height:92px;padding:9px;border:1px solid #aebbc5;border-radius:0 0 6px 6px;background:#fff;font:inherit;line-height:1.45;resize:vertical}
 .markdown-toolbar{display:flex;gap:4px;padding:5px;border:1px solid #aebbc5;border-bottom:0;border-radius:6px 6px 0 0;background:#f2f5f7}
 .markdown-toolbar button{min-width:34px;padding:5px 8px;border-radius:4px;background:#fff;color:#30414f;border:1px solid #c8d3da;box-shadow:none;font-size:12px}
@@ -14,11 +9,23 @@ body.startup-mode>.main{display:grid!important}
 .print-footer li{margin:.1em 0}
 .print-footer del{opacity:.72}
 .policy-block>strong,.policy-copy{display:none}
-@media(max-width:950px){body.startup-mode>.main{display:block!important}}
+.quick-type-divider{height:1px;background:#e1e7eb;margin:5px 3px}
+.quick-type-button.new-type{font-weight:800;color:var(--blue-strong)}
+.quick-new-type-form{display:grid;gap:9px;padding:6px 4px 4px}
+.quick-new-type-form .field{margin:0}
+.quick-new-type-form .field label{font-size:11px}
+.quick-new-type-form input{width:100%;padding:8px;border:1px solid #b9c8d2;border-radius:6px;background:#fff;color:#17212b}
+.quick-new-type-form input[type=color]{height:38px;padding:3px;cursor:pointer}
+.quick-new-type-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:2px}
+.quick-new-type-actions button{width:auto;min-width:82px}
+.quick-new-type-error{padding:7px 8px;border-radius:5px;background:#fbeaea;color:#8d2d2d;font-size:11px;line-height:1.35}
 html[data-theme="dark"] .markdown-field textarea{background:#0d161d;color:#eef5f8;border-color:#40535e}
 html[data-theme="dark"] .markdown-toolbar{background:#17232b;border-color:#40535e}
 html[data-theme="dark"] .markdown-toolbar button{background:#22313b;color:#e5edf3;border-color:#435864}
 html[data-theme="dark"] .markdown-toolbar button:hover{background:#2a3d49}
+html[data-theme="dark"] .quick-type-divider{background:#344953}
+html[data-theme="dark"] .quick-new-type-form input{background:#0d161d;color:#eef5f8;border-color:#40535e}
+html[data-theme="dark"] .quick-new-type-error{background:#3b2020;color:#f0b2b2}
 @media print{
  .print-footer .markdown-spacer{height:.7mm}
  .print-footer ul,.print-footer ol{margin:.7mm 0 .7mm 3.2mm;padding:0}
