@@ -1,41 +1,11 @@
 /* Exact half-pool booking support, including odd lane counts. */
-function exactHalfCoverageNote(laneCount=state.laneCount){
- const count=clamp(Number(laneCount)||1,1,12);
- return count%2
-  ? `With ${count} lanes, the centre lane is split at its midpoint so Top half and Bottom half each cover exactly 50% of the pool.`
-  : 'Top half and Bottom half each cover exactly 50% of the pool.';
-}
+function updateExactHalfLabels(){
+ document.querySelectorAll('option[value="half-first"]').forEach(option=>option.textContent='Top half');
+ document.querySelectorAll('option[value="half-second"]').forEach(option=>option.textContent='Bottom half');
 
-function updateExactHalfHints(){
- document.querySelectorAll('option[value="half-first"]').forEach(option=>option.textContent='Top half — exactly 50%');
- document.querySelectorAll('option[value="half-second"]').forEach(option=>option.textContent='Bottom half — exactly 50%');
-
- const fineSelect=$('fineCoverageMode');
- if(fineSelect){
-  let note=$('fineCoverageNote');
-  if(!note){
-   note=document.createElement('div');
-   note.id='fineCoverageNote';
-   note.className='pool-area-note';
-   fineSelect.closest('.field')?.appendChild(note);
-  }
-  if(note)note.textContent=exactHalfCoverageNote();
- }
-
- const formNote=document.querySelector('#coverageModeInput + .pool-area-note');
- if(formNote)formNote.textContent=exactHalfCoverageNote();
-
- const laneField=$('wizardLaneCount')?.closest('.field');
- if(laneField){
-  let hint=$('wizardHalfCoverageHint');
-  if(!hint){
-   hint=document.createElement('div');
-   hint.id='wizardHalfCoverageHint';
-   hint.className='pool-area-note';
-   laneField.appendChild(hint);
-  }
-  hint.textContent=exactHalfCoverageNote($('wizardLaneCount').value);
- }
+ $('fineCoverageNote')?.remove();
+ $('wizardHalfCoverageHint')?.remove();
+ document.querySelector('#coverageModeInput + .pool-area-note')?.remove();
 
  document.querySelectorAll('.booking-block[data-booking-id]').forEach(block=>{
   const booking=state.bookings.find(item=>item.id===block.dataset.bookingId);
@@ -58,26 +28,23 @@ function applyExactCoverageToSelection(mode){
 const renderSelectionPanelBeforeExactHalfCoverage=renderSelectionPanel;
 renderSelectionPanel=function(){
  const result=renderSelectionPanelBeforeExactHalfCoverage();
- updateExactHalfHints();
+ updateExactHalfLabels();
  return result;
 };
 
 const renderAllBeforeExactHalfCoverage=renderAll;
 renderAll=function(){
  const result=renderAllBeforeExactHalfCoverage();
- updateExactHalfHints();
+ updateExactHalfLabels();
  return result;
 };
 
 const openCreatorWizardBeforeExactHalfCoverage=openCreatorWizard;
 openCreatorWizard=function(){
  const result=openCreatorWizardBeforeExactHalfCoverage();
- updateExactHalfHints();
+ updateExactHalfLabels();
  return result;
 };
-
-$('wizardLaneCount')?.addEventListener('input',updateExactHalfHints);
-['startCreateBtn','newBtn'].forEach(id=>$(id)?.addEventListener('click',()=>requestAnimationFrame(updateExactHalfHints)));
 
 const showBookingContextMenuBeforeExactHalfCoverage=showBookingContextMenu;
 showBookingContextMenu=function(event,id){
@@ -96,8 +63,8 @@ showBookingContextMenu=function(event,id){
 
  const options=[
   ['all','Whole pool','▰'],
-  ['half-first','Top half — exactly 50%','⬒'],
-  ['half-second','Bottom half — exactly 50%','⬓']
+  ['half-first','Top half','⬒'],
+  ['half-second','Bottom half','⬓']
  ];
  options.forEach(([mode,label,icon])=>{
   const button=document.createElement('button');
