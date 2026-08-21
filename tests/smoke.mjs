@@ -98,6 +98,7 @@ try{
  assert(newType.booking?.sessionTypeId===newType.type?.id,'New booking type was not applied to the booking');
  assert((await page.locator('.legend').innerText()).includes('School Booking'),'New reusable booking type is missing from the key');
 
+ if(!(await page.locator('#settingsPanel').evaluate(node=>node.open)))await page.locator('#settingsPanel > summary').click();
  await page.locator('#footerPolicyMarkdownInput').fill('**Admission policy**\n*Smoke test policy*');
  await page.waitForTimeout(50);
  assert((await page.locator('.policy-block strong').innerText())==='Admission policy','Markdown bold did not render in the footer');
