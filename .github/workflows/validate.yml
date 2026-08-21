@@ -29,4 +29,5 @@ jobs:
       - name: Run V2.2 browser tests
         run: |
           node tests/keyboard-regression.mjs
+          node tests/policy-line-break.mjs
           node tests/smoke.mjs
