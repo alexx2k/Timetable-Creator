@@ -30,4 +30,5 @@ jobs:
         run: |
           node tests/keyboard-regression.mjs
           node tests/policy-line-break.mjs
+          node tests/booking-type-safety.mjs
           node tests/smoke.mjs
