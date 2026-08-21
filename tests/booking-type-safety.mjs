@@ -34,6 +34,7 @@ try{
  await page.waitForFunction(()=>!document.getElementById('setupWizard').classList.contains('open'));
 
  assert(await page.locator('#resetBookingTypesBtn').count()===1,'Reset booking types button is missing');
+ if(!(await page.locator('#sessionTypesPanel').evaluate(node=>node.open)))await page.locator('#sessionTypesPanel > summary').click();
 
  await page.evaluate(()=>{
   state.sessionTypes=state.sessionTypes.map(type=>type.id==='public-swimming'?{...type,name:'Changed Public',defaultTitle:'Changed Public',colour:'#111111'}:type);
