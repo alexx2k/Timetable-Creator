@@ -1,4 +1,4 @@
-/* User-facing interface, startup flow and printable footer editing. */
+/* User-facing interface and printable footer editing. */
 
 function uiContactMarkdown(current=state){
  const parts=String(current.venueAddress||'').split('·').map(part=>part.trim()).filter(Boolean);
@@ -97,7 +97,7 @@ function uiCreateMarkdownField(id,label){
 function uiEnsureFooterEditors(){
  if($('footerContactMarkdownInput')&&$('footerPolicyMarkdownInput'))return;
  uiEnsureFooterMarkdownState();
- const footerHeading=[...document.querySelectorAll('.settings-subheading')].find(node=>node.textContent.trim()==='Printed footer details');
+ const footerHeading=[...document.querySelectorAll('.settings-subheading')].find(node=>['Printed footer details','Footer'].includes(node.textContent.trim()));
  if(footerHeading)footerHeading.textContent='Footer';
  const venueNameField=$('venueNameInput')?.closest('.field');
  const venueAddressField=$('venueAddressInput')?.closest('.field');
@@ -107,8 +107,8 @@ function uiEnsureFooterEditors(){
  if(policyField)policyField.hidden=true;
  const anchor=policyField||venueAddressField||venueNameField||footerHeading;
  if(!anchor)return;
- const contact=uiCreateMarkdownField('footerContactMarkdownInput','Contact details (Markdown)');
- const policy=uiCreateMarkdownField('footerPolicyMarkdownInput','Admission policy (Markdown)');
+ const contact=uiCreateMarkdownField('footerContactMarkdownInput','Contact details');
+ const policy=uiCreateMarkdownField('footerPolicyMarkdownInput','Admission policy');
  anchor.after(contact,policy);
  contact.querySelector('textarea').value=state.footerContactMarkdown||'';
  policy.querySelector('textarea').value=state.footerPolicyMarkdown||'';
@@ -129,22 +129,33 @@ function uiRenderFooter(){
  if(contact)contact.innerHTML=uiRenderMarkdown(state.footerContactMarkdown);
 }
 
+function uiRenderLegend(){
+ const sheet=$('sheet');
+ if(!sheet)return;
+ const keyed=[...new Map(state.bookings.filter(booking=>booking.sessionTypeId&&sessionTypeById(booking.sessionTypeId)).map(booking=>{
+  const colour=bookingColour(booking);
+  const label=bookingTypeName(booking);
+  return [`${booking.sessionTypeId}|${colour}`,{label,colour}];
+ })).values()];
+ const legend=sheet.querySelector('.legend');
+ if(!keyed.length){legend?.remove();return}
+ if(!legend)return;
+ legend.innerHTML=keyed.map(item=>`<div class="legend-item"><span class="legend-swatch" style="background:${item.colour}"></span>${escapeHtml(item.label)}</div>`).join('');
+}
+
 function uiSimplifyStaticInterface(){
- $('startScreen')?.setAttribute('aria-hidden','true');
- if($('homeBtn'))$('homeBtn').hidden=true;
  const settingsSummary=$('settingsPanel')?.querySelector('summary');
  if(settingsSummary)settingsSummary.textContent='Settings';
+ const typesSummary=$('sessionTypesPanel')?.querySelector('summary');
+ if(typesSummary)typesSummary.textContent='Booking types';
  const printedTitleLabel=document.querySelector('label[for="titleInput"]');
  if(printedTitleLabel)printedTitleLabel.textContent='Timetable title';
  const subtitleLabel=document.querySelector('label[for="subtitleInput"]');
  if(subtitleLabel)subtitleLabel.textContent='Subtitle';
- const projectLabel=document.querySelector('label[for="projectNameInput"]');
- if(projectLabel)projectLabel.textContent='Timetable name';
  const openingHeading=[...document.querySelectorAll('.settings-subheading')].find(node=>node.textContent.trim()==='Opening hours by day');
  if(openingHeading)openingHeading.textContent='Opening hours';
  const rangeTitle=document.querySelector('.auto-range-card strong');
  if(rangeTitle)rangeTitle.textContent='Timetable range';
- document.querySelector('.auto-range-card > div > span')?.setAttribute('hidden','');
  document.querySelectorAll('.editor-panel .help').forEach(node=>node.hidden=true);
  const sessionName=document.querySelector('label[for="sessionTypeNameInput"]');
  if(sessionName)sessionName.textContent='Name';
@@ -152,14 +163,12 @@ function uiSimplifyStaticInterface(){
  if(sessionTitle)sessionTitle.textContent='Default title';
  const sessionColour=document.querySelector('label[for="sessionTypeColourInput"]');
  if(sessionColour)sessionColour.textContent='Colour';
+ if(!sessionTypeEditId&&$('saveSessionTypeBtn'))$('saveSessionTypeBtn').textContent='Add booking type';
  const selectionTitle=$('selectionPanel')?.querySelector('.panel-title');
  if(selectionTitle?.firstChild)selectionTitle.firstChild.textContent='Booking ';
  const previewTitle=document.querySelector('.preview-panel > .panel-title');
  if(previewTitle)previewTitle.textContent='Timetable';
- const quickCopy=$('quickTypeBar')?.querySelector('.floating-menu-heading span');
- if(quickCopy)quickCopy.hidden=true;
  if($('wizardTitle'))$('wizardTitle').textContent='New timetable';
- document.querySelectorAll('.wizard-step > .step-copy').forEach(node=>node.hidden=true);
  if($('printBtn'))$('printBtn').textContent='Print / PDF';
 }
 
@@ -168,10 +177,59 @@ function uiSimplifySelectionPanel(){
  if(empty)empty.textContent='Drag on the timetable to add a booking, or select one to edit it.';
  const activity=document.querySelector('label[for="fineActivity"]');
  if(activity)activity.textContent='Title';
+ const typeLabel=document.querySelector('label[for="fineSessionType"]');
+ if(typeLabel)typeLabel.textContent='Booking type';
+ const customOption=$('fineSessionType')?.querySelector('option[value=""]');
+ if(customOption)customOption.textContent='Custom';
+ const bulkLabel=document.querySelector('label[for="bulkSessionType"]');
+ if(bulkLabel)bulkLabel.textContent='Change booking type';
  document.querySelectorAll('#selectionBody .interaction-help,#selectionBody .multi-help,#selectionBody .color-field .help').forEach(node=>node.remove());
  const summary=$('selectionBody')?.querySelector('.multi-selection-summary');
  if(summary&&selectedIds?.size>1)summary.innerHTML=`<strong>${selectedIds.size} bookings selected.</strong><br>Drag a selected booking to move the group.`;
  document.querySelectorAll('#selectionBody .overlap-warning strong').forEach(node=>node.textContent='Overlap');
+}
+
+function uiOpenQuickTypeCreator(){
+ const booking=quickTypeBooking();
+ const actions=$('quickTypeActions');
+ if(!booking||!actions)return;
+ actions.innerHTML=`
+  <form class="quick-new-type-form" id="quickNewTypeForm">
+   <div class="field"><label for="quickNewTypeName">Name</label><input id="quickNewTypeName" autocomplete="off" required></div>
+   <div class="field"><label for="quickNewTypeTitle">Default title</label><input id="quickNewTypeTitle" autocomplete="off" placeholder="Same as name"></div>
+   <div class="field"><label for="quickNewTypeColour">Colour</label><input id="quickNewTypeColour" type="color" value="${bookingColour(booking)}"></div>
+   <div class="quick-new-type-error" id="quickNewTypeError" hidden></div>
+   <div class="quick-new-type-actions"><button type="button" class="secondary" data-quick-type-back>Back</button><button type="submit">Create type</button></div>
+  </form>`;
+ const name=$('quickNewTypeName');
+ const title=$('quickNewTypeTitle');
+ let titleTouched=false;
+ title.addEventListener('input',()=>{titleTouched=true});
+ name.addEventListener('input',()=>{if(!titleTouched)title.value=name.value});
+ actions.querySelector('[data-quick-type-back]').addEventListener('click',renderQuickTypeActions);
+ $('quickNewTypeForm').addEventListener('submit',event=>{
+  event.preventDefault();
+  const typeName=name.value.trim();
+  const defaultTitle=title.value.trim()||typeName;
+  const error=$('quickNewTypeError');
+  if(!typeName){error.textContent='Enter a name.';error.hidden=false;name.focus();return}
+  if(state.sessionTypes.some(type=>type.name.toLowerCase()===typeName.toLowerCase())){
+   error.textContent='That booking type already exists.';
+   error.hidden=false;
+   name.focus();
+   return;
+  }
+  const type={id:uid(),name:typeName,defaultTitle,colour:validHex($('quickNewTypeColour').value)};
+  const bookingId=booking.id;
+  state.sessionTypes.push(type);
+  state.bookings=state.bookings.map(item=>item.id===bookingId?{...item,activity:type.defaultTitle,sessionTypeId:type.id,sessionTypeName:type.name,colourHex:type.colour}:item);
+  selectedId=bookingId;
+  if(typeof selectedIds!=='undefined'){selectedIds.clear();selectedIds.add(bookingId)}
+  hideQuickTypeBar();
+  renderSessionTypeControls(type.id);
+  saveAndRender();
+ });
+ name.focus();
 }
 
 uiEnsureFooterMarkdownState();
@@ -211,17 +269,8 @@ const applyCentrePresetBeforeUi=applyCentrePreset;
 applyCentrePreset=function(){
  const id=$('centreInput')?.value;
  const preset=CENTRES[id];
- if(preset&&id!=='custom'){
-  state.footerContactMarkdown=[`**${preset.venueName}**`,preset.address,preset.phone].filter(Boolean).join('\n');
- }
+ if(preset&&id!=='custom')state.footerContactMarkdown=[`**${preset.venueName}**`,preset.address,preset.phone].filter(Boolean).join('\n');
  return applyCentrePresetBeforeUi();
-};
-
-const showStartScreenBeforeUi=showStartScreen;
-showStartScreen=function(){
- document.body.classList.remove('startup-mode');
- $('setupWizard')?.classList.remove('open');
- openCreatorWizard();
 };
 
 const setWizardStepBeforeUi=setWizardStep;
@@ -245,6 +294,7 @@ const renderSheetBeforeUi=renderSheet;
 renderSheet=function(){
  const result=renderSheetBeforeUi();
  uiRenderFooter();
+ uiRenderLegend();
  return result;
 };
 
@@ -270,11 +320,39 @@ renderAll=function(){
  return result;
 };
 
+const editSessionTypeBeforeUi=editSessionType;
+editSessionType=function(id){
+ const result=editSessionTypeBeforeUi(id);
+ if($('saveSessionTypeBtn'))$('saveSessionTypeBtn').textContent='Update booking type';
+ return result;
+};
+
+const resetSessionTypeFormBeforeUi=resetSessionTypeForm;
+resetSessionTypeForm=function(){
+ const result=resetSessionTypeFormBeforeUi();
+ if($('saveSessionTypeBtn'))$('saveSessionTypeBtn').textContent='Add booking type';
+ return result;
+};
+
 const renderQuickTypeActionsBeforeUi=renderQuickTypeActions;
 renderQuickTypeActions=function(){
  const result=renderQuickTypeActionsBeforeUi();
  const heading=$('quickTypeBar')?.querySelector('.floating-menu-heading strong');
  if(heading)heading.textContent='Booking type';
+ const actions=$('quickTypeActions');
+ if(!actions)return result;
+ const custom=actions.querySelector('[data-quick-custom]');
+ if(custom)custom.textContent='Custom';
+ const divider=document.createElement('div');
+ divider.className='quick-type-divider';
+ const create=document.createElement('button');
+ create.type='button';
+ create.className='quick-type-button new-type';
+ create.dataset.quickNewType='';
+ create.innerHTML='<span class="menu-icon" aria-hidden="true">＋</span>New booking type…';
+ create.addEventListener('click',uiOpenQuickTypeCreator);
+ if(custom)custom.before(divider,create);
+ else actions.append(divider,create);
  return result;
 };
 
@@ -287,6 +365,9 @@ showBookingContextMenu=function(event,id){
  if(only)only.lastChild.textContent='Select only this';
  const copy=menu?.querySelector('[data-menu-copy]');
  if(copy&&selectedIds.size>1)copy.lastChild.textContent='Copy booking';
+ [...(menu?.querySelectorAll('.context-menu-title')||[])].forEach(title=>{
+  if(title.textContent.trim()==='Change session type')title.textContent='Booking type';
+ });
  return result;
 };
 
