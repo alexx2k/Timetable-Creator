@@ -8,6 +8,23 @@ document.addEventListener('keydown',event=>{
 
 let footerEditorReturnFocus=null;
 
+function footerPolicyWithRatioBreak(value=''){
+ const text=String(value||'').replace(/\r\n?/g,'\n');
+ const marker='Parent/child ratios:';
+ const markerIndex=text.toLowerCase().indexOf(marker.toLowerCase());
+ if(markerIndex<=0)return text;
+ const before=text.slice(0,markerIndex).replace(/[ \t]+$/,'');
+ if(before.endsWith('\n'))return text;
+ return `${before}\n${text.slice(markerIndex)}`;
+}
+
+function footerNormalizePolicyLayout(current=state){
+ current.admissionsPolicy=footerPolicyWithRatioBreak(current.admissionsPolicy||'');
+ uiEnsureFooterMarkdownState(current);
+ current.footerPolicyMarkdown=footerPolicyWithRatioBreak(current.footerPolicyMarkdown||'');
+ return current;
+}
+
 function footerQuickContactMarkdown(){
  const name=$('venueNameInput').value.trim();
  const details=$('venueAddressInput').value.trim();
@@ -15,7 +32,7 @@ function footerQuickContactMarkdown(){
 }
 
 function footerQuickPolicyMarkdown(){
- const policy=$('admissionsPolicyInput').value.trim();
+ const policy=footerPolicyWithRatioBreak($('admissionsPolicyInput').value.trim());
  return ['**Admission policy**',policy].filter(Boolean).join('\n');
 }
 
@@ -32,7 +49,7 @@ function footerPlainLine(value=''){
 }
 
 function footerStateFromMarkdown(current=state){
- uiEnsureFooterMarkdownState(current);
+ footerNormalizePolicyLayout(current);
  const contactLines=String(current.footerContactMarkdown||'')
   .replace(/\r\n?/g,'\n')
   .split('\n')
@@ -68,7 +85,7 @@ function footerSyncMarkdownFromQuick(event){
 }
 
 function footerOpenMarkdownEditor(){
- uiEnsureFooterMarkdownState();
+ footerNormalizePolicyLayout();
  footerEditorReturnFocus=document.activeElement;
  $('footerContactMarkdownInput').value=state.footerContactMarkdown||'';
  $('footerPolicyMarkdownInput').value=state.footerPolicyMarkdown||'';
@@ -105,6 +122,9 @@ function footerBindMarkdownToolbar(){
  }));
 }
 
+footerNormalizePolicyLayout();
+footerStateFromMarkdown();
+
 const normalizeStateBeforeFooterEditor=normalizeState;
 normalizeState=function(candidate={}){
  const result=normalizeStateBeforeFooterEditor(candidate);
@@ -112,8 +132,16 @@ normalizeState=function(candidate={}){
  return result;
 };
 
+const makeNewStateFromWizardBeforeFooterEditor=makeNewStateFromWizard;
+makeNewStateFromWizard=function(){
+ const next=makeNewStateFromWizardBeforeFooterEditor();
+ footerStateFromMarkdown(next);
+ return next;
+};
+
 const toV2FileBeforeFooterEditor=toV2File;
 toV2File=function(current=state){
+ footerNormalizePolicyLayout(current);
  const file=toV2FileBeforeFooterEditor(current);
  file.app.version='2.2';
  return file;
@@ -127,8 +155,6 @@ bind=function(){
   $(id).addEventListener('input',footerSyncMarkdownFromQuick,{capture:true});
  });
 
- // ui.js normally treats these textareas as live editors. In the modal they are
- // drafts, so stop those listeners until the user explicitly applies changes.
  ['footerContactMarkdownInput','footerPolicyMarkdownInput'].forEach(id=>{
   $(id).addEventListener('input',event=>event.stopImmediatePropagation(),{capture:true});
  });
